@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 渲染工具 - Nano-banana</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2a2a2a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+        .file-input {
+            display: none;
+        }
+        .api-link {
+            color: #FFE135;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            min-height: 100vh;
+            color: #fff;
+            padding: 0;
+            padding-bottom: 280px;
+        }
+        .navbar {
+            background: #333;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FFE135;
+        }
+        .navbar-links {
+            display: flex;
+            gap: 15px;
+        }
+        .nav-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: #FFE135;
+            color: #333;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: #fff;
+        }
+        .main-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #555;
+            border-radius: 12px;
+            background: #1a1a1a;
+            min-height: calc(100vh - 250px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #777;
+        }
+        .upload-area input {
+            display: none;
+        }
+        .upload-placeholder {
+            text-align: center;
+            color: #aaa;
+        }
+        .upload-placeholder-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #777;
+        }
+        .upload-area.has-content {
+            border-style: solid;
+            border-color: #444;
+        }
+        .compare-container {
+            display: flex;
+            gap: 16px;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+        }
+        .compare-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .compare-box img {
+            max-width: 100%;
+            max-height: calc(100vh - 300px);
+            object-fit: contain;
+        }
+        .compare-label {
+            padding: 6px 12px;
+            background: #333;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .single-image-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .single-image-container img {
+            max-width: 100%;
+            max-height: calc(100vh - 320px);
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .image-resolution {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            padding: 4px 10px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 10;
+        }
+        .overlap-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .overlap-wrapper {
+            position: relative;
+            max-width: 100%;
+            max-height: calc(100vh - 280px);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .overlap-wrapper img {
+            display: block;
+            max-width: 100%;
+            max-height: calc(100vh - 280px);
+            object-fit: contain;
+        }
+        .overlap-wrapper .ref-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .overlap-slider {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #fff;
+            cursor: ew-resize;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        .overlap-slider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        .overlap-slider::after {
+            content: '◀ ▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            color: #666;
+            white-space: nowrap;
+        }
+        .overlap-label {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 12px;
+            background: #333;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 10;
+        }
+        .history-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            display: none;
+        }
+        .history-section.show {
+            display: block;
+        }
+        .history-title {
+            font-size: 1rem;
+            color: #aaa;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-clear-btn {
+            background: #444;
+            border: none;
+            color: #888;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .history-clear-btn:hover {
+            background: #f00;
+            color: #fff;
+        }
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+        .history-item {
+            position: relative;
+            background: #2a2a2a;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-color: #FFE135;
+        }
+        .history-item img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+        .history-item-info {
+            padding: 4px 6px;
+        }
+        .history-item-time {
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+        }
+        .history-item-resolution {
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+            margin-top: 2px;
+        }
+        .history-reuse-btn {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            padding: 3px 8px;
+            background: #FFE135;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .history-item:hover .history-reuse-btn {
+            opacity: 1;
+        }
+        .history-reuse-btn:hover {
+            background: #fff;
+        }
+        .history-zoom-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .history-item:hover .history-zoom-btn {
+            opacity: 1;
+        }
+        .history-zoom-btn:hover {
+            background: rgba(0,0,0,0.9);
+        }
+        .history-delete-btn {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .history-item:hover .history-delete-btn {
+            opacity: 1;
+        }
+        .history-delete-btn:hover {
+            background: #f00;
+        }
+        .toolbar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 800px;
+            background: #333;
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+        .toolbar-prompt {
+            width: 100%;
+        }
+        .toolbar-prompt textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid #555;
+            background: #222;
+            color: #fff;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
+            max-height: 150px;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+        .toolbar-prompt textarea:focus {
+            outline: none;
+            border-color: #FFE135;
+        }
+        .ref-images-upload {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+            min-height: 80px;
+            padding: 10px;
+            border: 2px dashed #444;
+            border-radius: 10px;
+            background: #222;
+        }
+        .ref-images-upload.empty {
+            justify-content: center;
+            align-items: center;
+        }
+        .ref-images-upload.dragover {
+            border-color: #FFE135;
+            background: #2a2a2a;
+        }
+        .ref-image-box {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #444;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ref-image-box:hover {
+            border-color: #FFE135;
+            transform: translateY(-2px);
+        }
+        .ref-image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .ref-image-box .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .ref-image-box .remove-btn:hover {
+            background: #f00;
+        }
+        .upload-hint {
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .toolbar-prompt textarea::placeholder {
+            color: #888;
+        }
+        .toolbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .toolbar-section {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toolbar label {
+            color: #aaa;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .toolbar select {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            background: #222;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+        .toolbar select option {
+            background: #333;
+            color: #fff;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .toolbar select:focus {
+            outline: none;
+            border-color: #FFE135;
+        }
+        .btn-generate {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #FFE135;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+        .btn-generate:hover {
+            background: #fff;
+        }
+        .btn-generate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #FFE135;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: #fff;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal {
+            background: #2a2a2a;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #FFE135;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #888;
+        }
+        .modal-close:hover {
+            color: #fff;
+        }
+        .modal .form-group {
+            margin-bottom: 15px;
+        }
+        .modal .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #aaa;
+        }
+        .modal .form-group input,
+        .modal .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #222;
+            color: #fff;
+            font-size: 14px;
+        }
+        .modal .form-group input:focus,
+        .modal .form-group select:focus {
+            outline: none;
+            border-color: #FFE135;
+        }
+        .modal-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary {
+            background: #444;
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: #555;
+        }
+        .btn-primary {
+            background: #FFE135;
+            color: #1a1a1a;
+        }
+        .btn-primary:hover {
+            background: #fff;
+        }
+        .toast {
+            position: fixed;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 250;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .guide-modal .modal {
+            background: #2a2a2a;
+            max-width: 750px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px 30px;
+        }
+        .guide-modal h2 {
+            color: #FFE135;
+            margin: 25px 0 12px;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 6px;
+        }
+        .guide-modal h2:first-child {
+            margin-top: 0;
+        }
+        .guide-modal h3 {
+            color: #ddd;
+            margin: 15px 0 8px;
+            font-size: 0.95rem;
+        }
+        .guide-modal p {
+            color: #bbb;
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+        .guide-modal .template-box {
+            background: #252525;
+            border-left: 3px solid #FFE135;
+            padding: 12px 15px;
+            margin: 12px 0;
+            border-radius: 0 6px 6px 0;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+        .guide-modal .example-box {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .guide-modal .example-title {
+            color: #FFE135;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .guide-modal .example-content {
+            color: #bbb;
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+        .guide-modal ul {
+            margin: 8px 0 12px 18px;
+            color: #bbb;
+        }
+        .guide-modal li {
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+        .guide-modal .tip-box {
+            background: #1f1f1f;
+            border: 1px solid #333;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .guide-modal .tip-title {
+            color: #FFE135;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-title">🍌 Nano-banana</div>
+        <div class="navbar-links">
+            <button class="nav-btn" id="guideBtn">指南</button>
+            <button class="nav-btn" id="galleryBtn">图库</button>
+            <button class="nav-btn" id="settingsBtn">设置</button>
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+        <div class="upload-area" id="uploadArea">
+            <input type="file" id="refImageInput" accept="image/*">
+            <div class="upload-placeholder">
+                <div>生成的图片将显示在这里</div>
+                <div class="upload-placeholder-text">点击历史记录可查看以往生成结果</div>
+            </div>
+        </div>
+
+        <div class="history-section" id="historySection">
+            <div class="history-title">
+                <span>生成历史</span>
+                <button class="history-clear-btn" id="historyClearBtn" title="清空历史">×</button>
+            </div>
+            <div class="history-grid" id="historyGrid"></div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="ref-images-upload empty" id="refImagesUpload">
+            <input type="file" id="refImagesInput" accept="image/*" multiple class="file-input">
+            <span class="upload-hint">点击或拖拽上传参考图（支持多张）</span>
+        </div>
+        <div class="toolbar-prompt">
+            <textarea id="prompt" placeholder="输入提示词，描述你想要生成的图片..."></textarea>
+        </div>
+        <div class="toolbar-controls">
+            <div class="toolbar-section">
+                <label>比例</label>
+                <select id="ratioSelect" title="选择图片比例">
+                    <option value="1:1">1:1</option>
+                    <option value="4:3">4:3</option>
+                    <option value="16:9">16:9</option>
+                    <option value="9:16">9:16</option>
+                    <option value="3:4">3:4</option>
+                    <option value="2:3">2:3</option>
+                    <option value="3:2">3:2</option>
+                    <option value="4:5">4:5</option>
+                    <option value="5:4">5:4</option>
+                    <option value="21:9">21:9</option>
+                </select>
+            </div>
+            <div class="toolbar-section" id="sizeSection">
+                <label>画质</label>
+                <select id="sizeSelect" title="选择图片画质">
+                    <option value="1K">1K</option>
+                    <option value="2K">2K</option>
+                    <option value="4K">4K</option>
+                </select>
+            </div>
+            <div class="toolbar-section">
+                <label>模型</label>
+                <select id="modelSelect" title="选择AI模型">
+                    <option value="nano-banana-2">⭐ nano-banana-2 推荐</option>
+                    <option value="nano-banana">nano-banana</option>
+                    <option value="nano-banana-pro">nano-banana-pro</option>
+                </select>
+            </div>
+            <button class="btn-generate" id="generateBtn">生成</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-title">
+                API 配置
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>API Key <a href="https://newapi.asia/register?channel=c_ripg6oed" target="_blank" rel="noopener noreferrer" class="api-link">[获取API]</a></label>
+                <input type="password" id="modalApiKey" placeholder="输入 API Key">
+            </div>
+            <div class="form-group">
+                <label>历史记录</label>
+                <button class="btn btn-secondary" id="clearHistoryBtn" style="width:100%;margin-top:5px;">清空历史记录</button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="modalCancelBtn">取消</button>
+                <button class="btn btn-primary" id="modalSaveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay guide-modal" id="guideModal">
+        <div class="modal">
+            <div class="modal-title">
+                🍌 Nano Banana 提示词指南
+                <button class="modal-close" id="guideClose">&times;</button>
+            </div>
+            
+            <h2>图像生成提示词（从零创建）</h2>
+            <p>将你想生成的内容分解成若干部分，并按从最重要到最不重要的顺序排列。靠前的细节对最终结果的影响更大。</p>
+            
+            <h3>提示词结构</h3>
+            <ul>
+                <li><strong>主体：</strong>是谁/是什么（数量、年龄、材质、形状等）</li>
+                <li><strong>动作与关系：</strong>正在做什么，以及如何与其他人/物体互动</li>
+                <li><strong>场景：</strong>地点、时间、天气和环境（室内/室外、城市/自然等）</li>
+                <li><strong>风格与媒介：</strong>照片/插画/3D/水彩/像素，写实程度，艺术指导方向</li>
+                <li><strong>构图与相机：</strong>特写/中景/广角，角度，镜头（如35mm），景深，主体位置</li>
+                <li><strong>光影与色彩：</strong>柔光/硬光，逆光，霓虹，冷暖对比，电影调色等</li>
+                <li><strong>质量与细节：</strong>清晰度，纹理，干净的背景（保持极简且具体）</li>
+                <li><strong>约束条件：</strong>你不想要的内容（例如：无文字/无水印/无多余肢体/无严重模糊）</li>
+            </ul>
+
+            <h3>可复用的模板</h3>
+            <div class="template-box">主体 + 动作/关系 + 场景（地点/时间/天气）+ 风格/媒介 + 构图/相机 + 光影/色彩 + 关键细节 + 约束条件</div>
+
+            <div class="example-box">
+                <div class="example-title">示例 1：写实摄影</div>
+                <div class="example-content">一位穿着轻薄风衣的女士站在雨中的城市街道上，湿漉漉的路面反射着光影，远处霓虹灯招牌柔和地虚化。写实摄影，35mm镜头，中景，浅景深，夜景，冷色调，皮肤纹理细节丰富，画面干净。无文字，无水印，无多余路人。</div>
+            </div>
+
+            <div class="example-box">
+                <div class="example-title">示例 2：风格鲜明的插画</div>
+                <div class="example-content">一只戴着游泳镜的橘猫在一个透明鱼缸旁举起一只爪子，鱼缸里有气泡和小鱼。干净的日式扁平插画，清新的色调，线条粗细一致，大量留白，居中构图，高对比度但不刺眼。非照片写实。无文字。</div>
+            </div>
+
+            <h2>图像编辑提示词（基于现有图像）</h2>
+            <p>进行编辑时，要明确哪些必须保持不变，哪些应该改变。描述越像正式的修改需求单，结果就越稳定。</p>
+            
+            <h3>推荐结构</h3>
+            <div class="template-box">保持（不可改变）+ 改变（修改什么）+ 如何（风格/强度/方向）+ 约束条件</div>
+
+            <div class="example-box">
+                <div class="example-title">示例 1：改变背景，保留主体</div>
+                <div class="example-content">保持人物的面部特征、发型、姿势和服装不变，并保持原始构图和光线方向。将背景替换为黄昏时的海滨木栈道，温暖的日落色调，带有轻微的逆光和远处海面的柔和反射。不要改变表情。无文字或水印。</div>
+            </div>
+
+            <div class="example-box">
+                <div class="example-title">示例 2：添加物体并匹配光影</div>
+                <div class="example-content">在桌子右侧添加一个小台灯：金属灯身，哑光白色灯罩，柔和的暖光。保持原始透视和景深。使台灯的阴影方向与现有光源一致。不要遮挡主体。不要改变整体调色。</div>
+            </div>
+
+            <h2>最佳实践</h2>
+            <ul>
+                <li><strong>先短后长，逐步迭代：</strong>用一句话锁定方向，然后添加细节；每次只改变一两件事。</li>
+                <li><strong>具体一点，不要模糊：</strong>与其说"更好"或"更高级"，不如具体说明"写实照片，柔光，浅景深，冷暖对比"。</li>
+                <li><strong>把重要的细节放在最前面：</strong>主体、动作、场景和风格应排在次要细节之前。</li>
+                <li><strong>避免矛盾：</strong>例如：同一个提示词中既有"极简白色背景"又有"密集复杂的背景细节"。</li>
+                <li><strong>利用约束条件缩小结果范围：</strong>"无文字"、"无水印"、"无多余路人"、"无变形的手"。</li>
+            </ul>
+
+            <div class="tip-box">
+                <div class="tip-title">💡 快速模板 - 生成图像</div>
+                <p>主体（数量/特征）+ 动作 + 场景（地点/时间/天气）+ 风格/媒介 + 构图/相机 + 光影/色彩 + 关键细节 + 约束条件</p>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">💡 快速模板 - 编辑图像</div>
+                <p>保持（不可改变）+ 改变（修改什么）+ 位置/强度 + 风格 + 光影一致性 + 约束条件</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const refImageInput = document.getElementById('refImageInput');
+        const promptInput = document.getElementById('prompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const ratioSelect = document.getElementById('ratioSelect');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const modalClose = document.getElementById('modalClose');
+        const modalApiKey = document.getElementById('modalApiKey');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        const modalSaveBtn = document.getElementById('modalSaveBtn');
+        const historySection = document.getElementById('historySection');
+        const guideBtn = document.getElementById('guideBtn');
+        const guideModal = document.getElementById('guideModal');
+        const guideClose = document.getElementById('guideClose');
+        const historyGrid = document.getElementById('historyGrid');
+        const galleryBtn = document.getElementById('galleryBtn');
+        const toast = document.getElementById('toast');
+        const sizeSelect = document.getElementById('sizeSelect');
+        const sizeSection = document.getElementById('sizeSection');
+        const modelSelect = document.getElementById('modelSelect');
+        const refImagesUpload = document.getElementById('refImagesUpload');
+        const refImagesInput = document.getElementById('refImagesInput');
+
+        let selectedRatio = '1:1';
+        let referenceImages = [];
+        let history = [];
+        const DB_NAME = 'NanoBananaDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'images';
+        let db = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        async function loadHistory() {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => {
+                    history = request.result.sort((a, b) => (b.id || 0) - (a.id || 0));
+                    console.log('加载历史记录:', history.length, '条');
+                    history.forEach((item, i) => console.log(`  [${i}] id:${item.id}, prompt:${item.prompt?.substring(0, 20)}, refImages:${item.refImages?.length || 0}`));
+                    resolve(history);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function saveToHistory(item) {
+            if (!db) await initDB();
+            console.log('保存历史记录, refImages数量:', item.refImages?.length || 0);
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.add(item);
+                request.onsuccess = () => {
+                    console.log('保存成功, id:', request.result);
+                    resolve(request.result);
+                };
+                request.onerror = () => {
+                    console.error('保存失败:', request.error);
+                    reject(request.error);
+                };
+            });
+        }
+
+        async function clearAllHistory() {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.clear();
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function deleteHistoryItem(id) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        window.clearHistory = async function() {
+            if (confirm('确定要清空所有历史记录吗？')) {
+                await clearAllHistory();
+                history = [];
+                renderHistory();
+                showToast('历史记录已清空');
+            }
+        };
+
+        async function renderHistory() {
+            await loadHistory();
+            if (history.length === 0) {
+                historySection.style.display = 'none';
+                return;
+            }
+            historySection.style.display = 'block';
+            historyGrid.innerHTML = history.map((item, idx) => `
+                <div class="history-item" onclick="useHistoryItem(${idx}, event)">
+                    <img src="${item.url}" alt="历史图片">
+                    <button class="history-zoom-btn" onclick="zoomHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                    <button class="history-delete-btn" onclick="deleteHistoryItem(${idx}, event)">×</button>
+                    <div class="history-item-info">
+                        <div class="history-item-time">${item.time}</div>
+                        ${item.resolution ? `<div class="history-item-resolution">${item.resolution}</div>` : ''}
+                    </div>
+                    <button class="history-reuse-btn" onclick="reuseHistoryItem(${idx}, event)">复用</button>
+                </div>
+            `).join('');
+        }
+
+        window.useHistoryItem = function(idx, e) {
+            if (e.target.classList.contains('history-zoom-btn')) return;
+            const item = history[idx];
+            if (!referenceImages.includes(item.url)) {
+                referenceImages.push(item.url);
+            }
+            updateRefImagesDisplay();
+            showToast('已添加到参考图');
+        };
+
+        window.zoomHistoryItem = function(idx, e) {
+            e.stopPropagation();
+            const item = history[idx];
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:500;cursor:pointer;';
+            overlay.innerHTML = `<img src="${item.url}" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px;">`;
+            overlay.addEventListener('click', () => overlay.remove());
+            document.body.appendChild(overlay);
+        };
+
+        window.deleteHistoryItem = async function(idx, e) {
+            e.stopPropagation();
+            const item = history[idx];
+            if (confirm('确定要删除这条历史记录吗？')) {
+                await deleteHistoryItem(item.id);
+                await renderHistory();
+                showToast('已删除');
+            }
+        };
+
+        window.reuseHistoryItem = function(idx, e) {
+            e.stopPropagation();
+            const item = history[idx];
+            console.log('复用历史项:', item);
+            promptInput.value = item.prompt || '';
+            selectedRatio = item.ratio;
+            ratioSelect.value = selectedRatio;
+            const histRefImages = item.refImages || [];
+            console.log('历史参考图数量:', histRefImages.length);
+            histRefImages.forEach(img => {
+                if (!referenceImages.some(ref => ref === img)) {
+                    referenceImages.push(img);
+                    console.log('添加参考图:', img?.substring(0, 50));
+                }
+            });
+            console.log('当前参考图数量:', referenceImages.length);
+            updateRefImagesDisplay();
+            showToast('已复用提示词和参考图');
+        };
+
+        renderHistory();
+
+        modalApiKey.value = localStorage.getItem('nanoApiKey') || '';
+
+        if (!localStorage.getItem('nanoApiKey')) {
+            setTimeout(() => {
+                settingsModal.classList.add('show');
+            }, 300);
+        }
+
+        uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#333'; });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = '#ccc'; });
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ccc';
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    referenceImages.push(e.target.result);
+                    updateRefImagesDisplay();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateRefImagesDisplay() {
+            if (referenceImages.length === 0) {
+                refImagesUpload.innerHTML = `
+                    <input type="file" id="refImagesInput" accept="image/*" multiple style="display:none;">
+                    <span class="upload-hint">点击或拖拽上传参考图（支持多张）</span>
+                `;
+                refImagesUpload.classList.add('empty');
+                document.getElementById('refImagesInput').addEventListener('change', e => { if (e.target.files[0]) handleFiles(e.target.files); });
+            } else {
+                let html = `<input type="file" id="refImagesInput" accept="image/*" multiple style="display:none;">`;
+                referenceImages.forEach((img, idx) => {
+                    html += `
+                        <div class="ref-image-box" onclick="removeRefImage(${idx})">
+                            <img src="${img}" alt="参考图">
+                            <button class="remove-btn">×</button>
+                        </div>
+                    `;
+                });
+                refImagesUpload.innerHTML = html;
+                refImagesUpload.classList.remove('empty');
+                document.getElementById('refImagesInput').addEventListener('change', e => { if (e.target.files[0]) handleFiles(e.target.files); });
+            }
+        }
+
+        window.removeRefImage = function(idx) {
+            referenceImages.splice(idx, 1);
+            updateRefImagesDisplay();
+        };
+
+        refImagesUpload.addEventListener('click', (e) => {
+            if (e.target.classList.contains('upload-hint') || e.target === refImagesUpload) {
+                document.getElementById('refImagesInput').click();
+            }
+        });
+        refImagesUpload.addEventListener('dragover', e => { e.preventDefault(); refImagesUpload.classList.add('dragover'); });
+        refImagesUpload.addEventListener('dragleave', () => { refImagesUpload.classList.remove('dragover'); });
+        refImagesUpload.addEventListener('drop', e => {
+            e.preventDefault();
+            refImagesUpload.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files);
+        });
+        refImagesInput.addEventListener('change', e => { if (e.target.files[0]) handleFiles(e.target.files); });
+
+        ratioSelect.addEventListener('change', () => {
+            selectedRatio = ratioSelect.value;
+        });
+
+        modelSelect.addEventListener('change', () => {
+            if (modelSelect.value === 'nano-banana-2' || modelSelect.value === 'nano-banana-pro') {
+                sizeSection.style.display = 'flex';
+            } else {
+                sizeSection.style.display = 'none';
+            }
+        });
+
+        if (modelSelect.value === 'nano-banana-2') {
+            sizeSection.style.display = 'flex';
+        }
+
+        generateBtn.addEventListener('click', generateImage);
+
+        async function generateImage() {
+            const apiKey = modalApiKey.value.trim();
+            const prompt = promptInput.value.trim();
+            const selectedModel = modelSelect.value;
+            
+            // 模型映射
+            let geminiModel = '';
+            switch(selectedModel) {
+                case 'nano-banana-pro':
+                    geminiModel = 'gemini-3-pro-image-preview';
+                    break;
+                case 'nano-banana-2':
+                    geminiModel = 'gemini-3.1-flash-image-preview';
+                    break;
+                case 'nano-banana':
+                default:
+                    geminiModel = 'gemini-2.5-flash-image-preview';
+                    break;
+            }
+            
+            // 构建API URL，添加key参数
+            const apiUrl = `https://newapi.asia/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+
+            if (!apiKey) {
+                showToast('请先配置 API Key');
+                settingsModal.classList.add('show');
+                return;
+            }
+            if (!prompt) {
+                showToast('请输入提示词');
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.textContent = '生成中...';
+
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-overlay';
+            loadingDiv.innerHTML = '<div class="spinner"></div><div class="loading-text">正在生成图片...</div>';
+            document.body.appendChild(loadingDiv);
+
+            const contents = [
+                {
+                    "role": "user",
+                    "parts": [
+                        { "text": prompt }
+                    ]
+                }
+            ];
+            
+            if (referenceImages.length > 0) {
+                referenceImages.forEach(img => {
+                    contents[0].parts.push({
+                        "inline_data": {
+                            "mime_type": "image/jpeg",
+                            "data": img.split(',')[1] // 提取base64数据部分
+                        }
+                    });
+                });
+            }
+            
+            // 构建正确的请求体结构
+            const requestBody = {
+                contents: contents,
+                generationConfig: {
+                    responseModalities: ["TEXT", "IMAGE"],
+                    imageConfig: {
+                        aspectRatio: selectedRatio,
+                        imageSize: sizeSelect.value
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `请求失败 (${response.status})`);
+                }
+
+                const data = await response.json();
+                console.log('API响应数据:', data);
+                // 尝试不同的路径来获取图片数据
+                let imageData = null;
+                
+                // 尝试路径1: candidates[0].content.parts[0].inline_data.data
+                if (data.candidates?.[0]?.content?.parts?.[0]?.inline_data?.data) {
+                    imageData = data.candidates[0].content.parts[0].inline_data.data;
+                    console.log('使用路径1: inline_data.data');
+                }
+                // 尝试路径2: candidates[0].content.parts[0].inlineData.data
+                else if (data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data) {
+                    imageData = data.candidates[0].content.parts[0].inlineData.data;
+                    console.log('使用路径2: inlineData.data');
+                }
+                // 尝试路径3: candidates[0].content.parts[1].inline_data.data (图片在第二个part)
+                else if (data.candidates?.[0]?.content?.parts?.[1]?.inline_data?.data) {
+                    imageData = data.candidates[0].content.parts[1].inline_data.data;
+                    console.log('使用路径3: parts[1].inline_data.data');
+                }
+                // 尝试路径4: data.images[0].url (常见的图片API返回格式)
+                else if (data.images?.[0]?.url) {
+                    imageData = data.images[0].url;
+                    console.log('使用路径4: images[0].url');
+                }
+                // 尝试路径5: data.data[0].url (OpenAI API格式)
+                else if (data.data?.[0]?.url) {
+                    imageData = data.data[0].url;
+                    console.log('使用路径5: data[0].url');
+                }
+                // 尝试路径6: candidates[0].content.parts 中任意一个包含 inline_data 的
+                else {
+                    for (let i = 0; i < (data.candidates?.[0]?.content?.parts?.length || 0); i++) {
+                        const part = data.candidates[0].content.parts[i];
+                        if (part?.inline_data?.data) {
+                            imageData = part.inline_data.data;
+                            console.log(`使用路径6: parts[${i}].inline_data.data`);
+                            break;
+                        }
+                    }
+                }
+                
+                if (!imageData) {
+                    console.error('API完整响应:', JSON.stringify(data, null, 2));
+                    throw new Error('未返回有效图片');
+                }
+                console.log('找到图片数据:', imageData.substring(0, 100) + '...');
+
+                // 检查imageData是否是base64数据还是URL
+                let imageUrl;
+                if (imageData.startsWith('http')) {
+                    // 如果是URL，直接使用
+                    imageUrl = imageData;
+                } else {
+                    // 如果是base64数据，尝试自动检测格式（检查是否包含jpeg/jpg标记）
+                    const isJpeg = imageData.startsWith('/9j/') || imageData.startsWith('iVBOR');
+                    const mimeType = isJpeg ? 'image/jpeg' : 'image/png';
+                    imageUrl = `data:${mimeType};base64,${imageData}`;
+                }
+                console.log('生成的图片URL:', imageUrl.substring(0, 100) + '...');
+                const now = new Date();
+                const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+                const currentRefImages = [...referenceImages];
+                
+                const img = new Image();
+                img.onload = async () => {
+                    const resolution = `${img.naturalWidth} × ${img.naturalHeight}`;
+                    uploadArea.classList.add('has-content');
+                    uploadArea.innerHTML = `
+                        <div class="single-image-container" style="position:relative;">
+                            <img src="${imageUrl}" alt="生成结果">
+                            <div class="image-resolution" id="imgResolution">${resolution}</div>
+                        </div>
+                    `;
+                    try {
+                        await saveToHistory({ url: imageUrl, prompt, ratio: selectedRatio, refImages: currentRefImages, time: timeStr, resolution });
+                        await renderHistory();
+                    } catch (e) {
+                        console.warn('历史记录保存失败:', e);
+                    }
+                    promptInput.value = '';
+                    referenceImages = [];
+                    updateRefImagesDisplay();
+                    showToast('生成成功！');
+                };
+                img.onerror = async () => {
+                    uploadArea.classList.add('has-content');
+                    uploadArea.innerHTML = `
+                        <div class="single-image-container" style="position:relative;">
+                            <img src="${imageUrl}" alt="生成结果">
+                        </div>
+                    `;
+                    try {
+                        await saveToHistory({ url: imageUrl, prompt, ratio: selectedRatio, refImages: currentRefImages, time: timeStr, resolution: '' });
+                        await renderHistory();
+                    } catch (e) {
+                        console.warn('历史记录保存失败:', e);
+                    }
+                    promptInput.value = '';
+                    referenceImages = [];
+                    updateRefImagesDisplay();
+                    showToast('生成成功！');
+                };
+                img.src = imageUrl;
+
+            } catch (error) {
+                showToast(`生成失败: ${error.message}`);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '生成';
+                loadingDiv.remove();
+            }
+        }
+
+        function initOverlapSlider() {
+            const wrapper = document.getElementById('overlapWrapper');
+            const slider = document.getElementById('overlapSlider');
+            const resultImg = document.getElementById('resultImg');
+            if (!wrapper || !slider || !resultImg) return;
+
+            let isDragging = false;
+
+            function updateSlider(x) {
+                const rect = wrapper.getBoundingClientRect();
+                let pos = x - rect.left;
+                if (pos < 0) pos = 0;
+                if (pos > rect.width) pos = rect.width;
+                const percent = (pos / rect.width) * 100;
+                slider.style.left = `${percent}%`;
+                resultImg.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
+            }
+
+            slider.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    updateSlider(e.clientX);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            slider.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                e.preventDefault();
+            });
+
+            slider.addEventListener('touchmove', (e) => {
+                if (isDragging && e.touches[0]) {
+                    updateSlider(e.touches[0].clientX);
+                }
+            });
+
+            slider.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+
+            updateSlider(wrapper.getBoundingClientRect().left + wrapper.offsetWidth / 2);
+        }
+
+        function loadResolution(url) {
+            const img = new Image();
+            img.onload = () => {
+                const resEl = document.getElementById('imgResolution');
+                if (resEl) resEl.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
+            };
+            img.onerror = () => {
+                const resEl = document.getElementById('imgResolution');
+                if (resEl) resEl.textContent = '';
+            };
+            img.src = url;
+        }
+
+        galleryBtn.addEventListener('click', () => {
+            if (history.length > 0) {
+                historySection.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                showToast('暂无历史记录');
+            }
+        });
+
+        guideBtn.addEventListener('click', () => {
+            guideModal.classList.add('show');
+        });
+
+        guideClose.addEventListener('click', () => {
+            guideModal.classList.remove('show');
+        });
+
+        guideModal.addEventListener('click', e => {
+            if (e.target === guideModal) {
+                guideModal.classList.remove('show');
+            }
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.classList.add('show');
+        });
+
+        modalClose.addEventListener('click', () => {
+            settingsModal.classList.remove('show');
+        });
+
+        modalCancelBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('show');
+        });
+
+        settingsModal.addEventListener('click', e => {
+            if (e.target === settingsModal) {
+                settingsModal.classList.remove('show');
+            }
+        });
+
+        modalSaveBtn.addEventListener('click', () => {
+            localStorage.setItem('nanoApiKey', modalApiKey.value);
+            settingsModal.classList.remove('show');
+            showToast('配置已保存');
+        });
+
+        document.getElementById('clearHistoryBtn').addEventListener('click', async () => {
+            if (confirm('确定要清空所有历史记录吗？')) {
+                await clearAllHistory();
+                history = [];
+                renderHistory();
+                showToast('历史记录已清空');
+            }
+        });
+
+        document.getElementById('historyClearBtn').addEventListener('click', async () => {
+            if (confirm('确定要清空所有历史记录吗？')) {
+                await clearAllHistory();
+                history = [];
+                renderHistory();
+                showToast('历史记录已清空');
+            }
+        });
+
+        initDB().then(() => renderHistory());
+    </script>
+</body>
+</html>
