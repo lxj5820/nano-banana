@@ -390,6 +390,29 @@
         .history-reuse-btn:hover {
             background: #fff;
         }
+        .history-retry-btn {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 24px;
+            height: 24px;
+            background: #FFE135;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .history-item:hover .history-retry-btn {
+            opacity: 1;
+        }
+        .history-retry-btn:hover {
+            background: #fff;
+        }
         .history-zoom-btn {
             position: absolute;
             top: 4px;
@@ -994,7 +1017,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana</div>
+        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V5.1</span></div>
         <div class="navbar-links">
             <button class="nav-btn" id="guideBtn">指南</button>
             <button class="nav-btn" id="galleryBtn">图库</button>
@@ -1373,12 +1396,14 @@
                     : isError
                     ? `<div class="history-error"><div style="font-size:11px;color:#f00;">失败</div><div style="font-size:10px;color:#888;">${item.errorMsg || ''}</div></div>`
                     : `<img src="${item.url}" alt="历史图片">`;
-                const hideButtons = isPending || isError;
+                const hideButtons = isPending;
                 return `
-                <div class="history-item ${isPending ? 'pending' : ''} ${isError ? 'error' : ''}" ${!hideButtons ? `onclick="useHistoryItem(${idx}, event)"` : ''}>
+                <div class="history-item ${isPending ? 'pending' : ''} ${isError ? 'error' : ''}" ${!hideButtons && !isError ? `onclick="useHistoryItem(${idx}, event)"` : ''}>
                     ${imgContent}
                     <button class="history-delete-btn" onclick="deleteHistoryItemById(${item.id}, event)">×</button>
-                    ${!hideButtons ? `
+                    ${isError ? `
+                    <button class="history-retry-btn" onclick="retryHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
+                    ` : !hideButtons ? `
                     <button class="history-zoom-btn" onclick="zoomHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
                     <button class="history-download-btn" onclick="downloadHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
                     <button class="history-reuse-btn" onclick="reuseHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
@@ -1501,6 +1526,27 @@
             console.log('当前参考图数量:', referenceImages.length);
             updateRefImagesDisplay();
             showToast('已复用提示词和参考图');
+        };
+
+        window.retryHistoryItem = async function(idx, e) {
+            e.stopPropagation();
+            const item = history[idx];
+            if (!item.prompt) {
+                showToast('无提示词信息，无法重试');
+                return;
+            }
+            await deleteHistoryItem(item.id);
+            promptInput.value = item.prompt || '';
+            selectedRatio = item.ratio || '1:1';
+            ratioSelect.value = selectedRatio;
+            referenceImages = [];
+            (item.refImages || []).forEach(img => {
+                if (!referenceImages.some(ref => ref === img)) {
+                    referenceImages.push(img);
+                }
+            });
+            updateRefImagesDisplay();
+            showToast('已填充信息，请点击生成按钮');
         };
 
         renderHistory();
@@ -1660,26 +1706,16 @@
                 'nano-banana-2': 'gemini-3.1-flash-image-preview',
                 'nano-banana': 'gemini-2.5-flash-image-preview'
             };
-            const apiUrl = `https://newapi.asia/v1beta/models/${modelMap[selectedModel] || modelMap['nano-banana']}:generateContent?key=${apiKey}`;
-
-            const contents = [
-                {
-                    "role": "user",
-                    "parts": [
-                        { "text": prompt }
-                    ]
-                }
-            ];
+            const modelsSupportImageInput = ['gemini-3-pro-image-preview', 'gemini-3.1-flash-image-preview'];
+            const apiModel = modelMap[selectedModel] || modelMap['nano-banana'];
+            const apiUrl = `https://newapi.asia/v1beta/models/${apiModel}:generateContent?key=${apiKey}`;
             
-            if (referenceImages.length > 0) {
-                referenceImages.forEach(img => {
-                    contents[0].parts.push({
-                        "inline_data": {
-                            "mime_type": "image/jpeg",
-                            "data": img.split(',')[1]
-                        }
-                    });
-                });
+            if (referenceImages.length > 0 && !modelsSupportImageInput.includes(apiModel)) {
+                showToast('图生图请使用 nano-banana-2 或 nano-banana-pro 模型');
+                runningTasks--;
+                taskQueue--;
+                updateGenerateBtn();
+                return;
             }
 
             let taskSuccessCount = 0;
@@ -1708,17 +1744,68 @@
 
             async function generateSingleImage(index) {
                 const slot = document.getElementById(`genSlot${taskId}_${index}`);
-                const requestBody = {
-                    contents: contents,
-                    generationConfig: {
-                        responseModalities: ["TEXT", "IMAGE"],
-                        imageConfig: {
-                            aspectRatio: selectedRatio,
-                            imageSize: sizeSelect.value,
-                            numberOfImages: 1
+                
+                let requestBody;
+                if (referenceImages.length > 0 && modelsSupportImageInput.includes(apiModel)) {
+                    const parts = [];
+                    const processImage = (img) => {
+                        return new Promise((resolve) => {
+                            const imgEl = new Image();
+                            imgEl.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                const maxSize = 1024;
+                                let width = imgEl.width;
+                                let height = imgEl.height;
+                                if (width > maxSize || height > maxSize) {
+                                    if (width > height) {
+                                        height = (height / width) * maxSize;
+                                        width = maxSize;
+                                    } else {
+                                        width = (width / height) * maxSize;
+                                        height = maxSize;
+                                    }
+                                }
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(imgEl, 0, 0, width, height);
+                                const resizedData = canvas.toDataURL('image/jpeg', 0.85);
+                                const base64Data = resizedData.split(',')[1].replace(/\s/g, '');
+                                resolve({
+                                    inline_data: {
+                                        mime_type: "image/jpeg",
+                                        data: base64Data
+                                    }
+                                });
+                            };
+                            imgEl.src = img;
+                        });
+                    };
+                    const imageParts = await Promise.all(referenceImages.map(processImage));
+                    parts.push(...imageParts);
+                    parts.push({ text: prompt });
+                    requestBody = {
+                        contents: [{ role: "user", parts: parts }],
+                        generationConfig: {
+                            responseModalities: ["TEXT", "IMAGE"],
+                            imageConfig: {
+                                aspectRatio: selectedRatio,
+                                imageSize: sizeSelect.value
+                            }
                         }
-                    }
-                };
+                    };
+                } else {
+                    requestBody = {
+                        contents: [{ role: "user", parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            responseModalities: ["TEXT", "IMAGE"],
+                            imageConfig: {
+                                aspectRatio: selectedRatio,
+                                imageSize: sizeSelect.value
+                            }
+                        }
+                    };
+                }
 
                 try {
                     const response = await fetch(apiUrl, {
@@ -1739,7 +1826,7 @@
                     
                     let imageUrl = null;
                     for (const part of parts) {
-                        const imageData = part.inline_data?.data || part.inlineData?.data;
+                        const imageData = part.inlineData?.data || part.inline_data?.data;
                         if (imageData) {
                             if (imageData.startsWith('http')) {
                                 imageUrl = imageData;
