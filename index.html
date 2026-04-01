@@ -1052,20 +1052,20 @@
         }
 
         .selection-toolbar {
-            position: fixed;
-            bottom: 200px;
+            position: absolute;
+            top: 140px;
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 14px 28px;
+            padding: 12px 24px;
             border-radius: 50px;
             display: none;
-            gap: 16px;
+            gap: 12px;
             align-items: center;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
-            z-index: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            z-index: 200;
             border: 1px solid rgba(255, 225, 53, 0.2);
         }
         .selection-toolbar.show {
@@ -1095,7 +1095,6 @@
             .sidebar-resizer { display: none; }
             .history-sidebar { width: 100% !important; max-width: none !important; }
             .toolbar { left: 50%; width: calc(100% - 40px); }
-            .selection-toolbar { left: 50%; }
         }
 
         /* 移除冗余的旧按钮样式 */
@@ -1386,24 +1385,6 @@
             font-size: 12px;
             font-weight: bold;
             z-index: 20;
-        }
-        .selection-toolbar {
-            position: fixed;
-            bottom: 220px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            padding: 10px 20px;
-            border-radius: 12px;
-            display: none;
-            gap: 12px;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            z-index: 150;
-            border: 1px solid #444;
-        }
-        .selection-toolbar.show {
-            display: flex;
         }
         .selection-count {
             font-size: 13px;
@@ -2196,10 +2177,9 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V7.0</span></div>
+        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V7.1</span></div>
         <div class="navbar-links">
             <button class="nav-btn" id="guideBtn">指南</button>
-            <button class="nav-btn" id="galleryBtn">图库</button>
             <button class="nav-btn" id="settingsBtn">设置</button>
         </div>
     </nav>
@@ -2249,17 +2229,15 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </div>
+            <div class="selection-toolbar" id="selectionToolbar">
+                <span class="selection-count" id="selectionCount">已选中 0 项</span>
+                <button class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="cancelSelectBtn">取消</button>
+                <button class="btn btn-primary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="addToCollectionBtn">加入合集</button>
+            </div>
             <div class="history-section" id="historySection">
                 <div class="history-grid" id="historyGrid"></div>
             </div>
         </aside>
-    </div>
-
-    <div class="selection-toolbar" id="selectionToolbar">
-        <span class="selection-count" id="selectionCount">已选中 0 项</span>
-        <button class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="cancelSelectBtn">取消</button>
-        <button class="btn btn-primary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="addToCollectionBtn">加入合集</button>
-    </div>
 
     <div class="modal-overlay" id="collectionModal">
         <div class="modal">
@@ -2449,7 +2427,6 @@
         const guideModal = document.getElementById('guideModal');
         const guideClose = document.getElementById('guideClose');
         const historyGrid = document.getElementById('historyGrid');
-        const galleryBtn = document.getElementById('galleryBtn');
         const downloadAllBtn = document.getElementById('downloadAllBtn');
         const toast = document.getElementById('toast');
         const sizeSelect = document.getElementById('sizeSelect');
@@ -2847,7 +2824,7 @@
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                 </div>
                                 <div class="action-btn" onclick="reuseHistoryItem(${idx}, event)" title="复用参数">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                                 </div>
                                 <div class="action-btn" onclick="downloadHistoryItem(${idx}, event)" title="下载">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -2890,7 +2867,7 @@
         const resizer = document.getElementById('sidebarResizer');
         const sidebar = document.getElementById('historySidebar');
         const mainContent = document.querySelector('.main-content');
-        const toolbars = [document.querySelector('.toolbar'), document.getElementById('selectionToolbar')];
+        const toolbars = [document.querySelector('.toolbar')];
 
         let isResizing = false;
 
@@ -3074,56 +3051,95 @@
             e.stopPropagation();
             const item = history[idx];
             const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:500;overflow:auto;';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:500;overflow:hidden;cursor:zoom-in;';
+            
             const container = document.createElement('div');
-            container.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;min-width:100%;min-height:100%;';
+            container.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:transform 0.1s ease-out;';
             const img = document.createElement('img');
             img.src = item.url;
-            img.style.cssText = 'max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px;';
+            img.style.cssText = 'max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;display:block;user-select:none;';
             container.appendChild(img);
             overlay.appendChild(container);
-            
+
             let scale = 1;
-            
-            img.addEventListener('wheel', (we) => {
+            let translateX = 0;
+            let translateY = 0;
+            let isDragging = false;
+            let startX = 0, startY = 0;
+
+            function updateTransform() {
+                container.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${scale})`;
+            }
+
+            function clampTranslation() {
+                const rect = img.getBoundingClientRect();
+                const maxX = Math.max(0, (rect.width * scale - window.innerWidth) / 2);
+                const maxY = Math.max(0, (rect.height * scale - window.innerHeight) / 2);
+                translateX = Math.max(-maxX, Math.min(maxX, translateX));
+                translateY = Math.max(-maxY, Math.min(maxY, translateY));
+            }
+
+            overlay.addEventListener('wheel', (we) => {
                 we.preventDefault();
-                we.stopPropagation();
-                const delta = we.deltaY > 0 ? -0.15 : 0.15;
-                scale = Math.max(0.5, Math.min(5, scale + delta));
-                img.style.transform = `scale(${scale})`;
-                img.style.cursor = scale > 1 ? 'grab' : 'zoom-in';
-            });
+            }, { passive: false });
             
-            img.addEventListener('mousedown', (md) => {
+            overlay.addEventListener('wheel', (we) => {
+                const delta = we.deltaY > 0 ? -0.2 : 0.2;
+                scale = scale + delta;
+                if (scale < 0.1) scale = 0.1;
+                
+                clampTranslation();
+                updateTransform();
+                
+                overlay.style.cursor = scale > 1 ? 'grab' : 'zoom-in';
+            });
+
+            overlay.addEventListener('mousedown', (md) => {
                 if (scale <= 1) return;
+                isDragging = true;
+                startX = md.clientX - translateX;
+                startY = md.clientY - translateY;
+                overlay.style.cursor = 'grabbing';
                 md.preventDefault();
-                let startX = md.clientX;
-                let startY = md.clientY;
-                let startLeft = container.offsetLeft;
-                let startTop = container.offsetTop;
-                
-                function onMove(mm) {
-                    const dx = mm.clientX - startX;
-                    const dy = mm.clientY - startY;
-                    container.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-                }
-                
-                function onUp() {
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onUp);
-                }
-                
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onUp);
             });
-            
+
+            document.addEventListener('mousemove', (mm) => {
+                if (!isDragging) return;
+                translateX = mm.clientX - startX;
+                translateY = mm.clientY - startY;
+                clampTranslation();
+                updateTransform();
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    overlay.style.cursor = 'grab';
+                }
+            });
+
+            overlay.addEventListener('dblclick', () => {
+                if (scale > 1) {
+                    scale = 1;
+                    translateX = 0;
+                    translateY = 0;
+                } else {
+                    scale = 2;
+                }
+                updateTransform();
+                overlay.style.cursor = scale > 1 ? 'grab' : 'zoom-in';
+            });
+
+            document.addEventListener('keydown', (kd) => {
+                if (kd.key === 'Escape') overlay.remove();
+            });
+
             overlay.addEventListener('click', (ce) => {
-                if (ce.target === overlay || ce.target === container) {
-                    overlay.remove();
-                }
+                if (ce.target === overlay) overlay.remove();
             });
-            
+
             document.body.appendChild(overlay);
+            setTimeout(() => overlay.style.opacity = '1', 10);
         };
 
         window.reuseHistoryItem = function(idx, e) {
@@ -3598,18 +3614,6 @@
             };
             img.src = url;
         }
-
-        galleryBtn.addEventListener('click', () => {
-            if (history.length > 0) {
-                document.querySelector('.history-sidebar').scrollIntoView({ behavior: 'smooth' });
-                // If it's a sidebar, we might want to highlight it or something
-                const sidebar = document.querySelector('.history-sidebar');
-                sidebar.style.borderColor = '#FFE135';
-                setTimeout(() => sidebar.style.borderColor = '#333', 1000);
-            } else {
-                showToast('暂无历史记录');
-            }
-        });
 
         downloadAllBtn.addEventListener('click', async () => {
             if (history.length === 0) {
