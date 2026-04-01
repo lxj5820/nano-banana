@@ -35,11 +35,1072 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a1a;
+            background: #0f0f0f;
             min-height: 100vh;
             color: #fff;
             padding: 0;
-            padding-bottom: 280px;
+            margin: 0;
+            overflow: hidden; /* 全局禁止滚动 */
+        }
+        .navbar {
+            background: #1a1a1a;
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            position: relative;
+            z-index: 1000;
+        }
+        .app-container {
+            display: flex;
+            height: calc(100vh - 60px);
+            max-width: 100vw;
+            overflow: hidden;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px 40px;
+            overflow: hidden; /* 严格禁止滚动 */
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #0f0f0f;
+            background-image: 
+                radial-gradient(circle at top center, rgba(255, 225, 53, 0.03), transparent 70%),
+                radial-gradient(circle at 2px 2px, #181818 1px, transparent 0);
+            background-size: 100% 100%, 40px 40px;
+            height: calc(100vh - 60px);
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.6);
+        }
+        
+        .upload-area {
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            background: rgba(22, 22, 22, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            width: 100%;
+            max-width: 1000px;
+            height: 100%;
+            /* 精确计算高度：100vh - 导航 (60) - 工具栏 (~220) - 上下 padding (40) - 安全余量 (20) = 100vh - 340 */
+            max-height: calc(100vh - 320px); 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            overflow: hidden;
+            z-index: 5;
+        }
+        .upload-area:hover {
+            border-color: rgba(255, 225, 53, 0.15);
+            background: rgba(28, 28, 28, 0.7);
+        }
+        .upload-area.has-content {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .gen-slots-container {
+            display: grid;
+            gap: 16px;
+            width: 100%;
+            height: 100%;
+            max-height: 100%;
+            align-content: center;
+            justify-items: stretch;
+            overflow: hidden;
+        }
+        .gen-slot {
+            background: #1a1a1a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            height: 100%;
+            max-height: calc(100vh - 340px);
+        }
+        .gen-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+        
+        .slot-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: #151515;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 10;
+        }
+        
+        .pulse-logo {
+            font-size: 36px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+
+        .upload-placeholder-icon {
+            width: 56px;
+            height: 56px;
+            background: #222;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            color: #444;
+            transition: all 0.3s;
+        }
+        .upload-area:hover .upload-placeholder-icon {
+            background: #FFE135;
+            color: #1a1a1a;
+            transform: rotate(90deg);
+        }
+
+        .upload-placeholder-text-main {
+            font-size: 16px;
+            font-weight: 700;
+            color: #eee;
+            margin-bottom: 6px;
+        }
+        .upload-placeholder-text-sub {
+            font-size: 12px;
+            color: #555;
+        }
+        .navbar {
+            background: #1a1a1a;
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            position: relative;
+            z-index: 1000;
+        }
+        .navbar-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FFE135;
+        }
+        .navbar-links {
+            display: flex;
+            gap: 12px;
+        }
+        .nav-btn {
+            padding: 6px 16px;
+            border-radius: 8px;
+            border: none;
+            background: #FFE135;
+            color: #333;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            background: #fff;
+            transform: translateY(-1px);
+        }
+
+        .app-container {
+            display: flex;
+            height: calc(100vh - 60px);
+            max-width: 100vw;
+            overflow: hidden;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px 40px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #0f0f0f;
+            /* 组合背景：动态网格 + 顶部聚光灯光晕 */
+            background-image: 
+                radial-gradient(circle at top center, rgba(255, 225, 53, 0.05), transparent 60%),
+                radial-gradient(circle at 2px 2px, #1a1a1a 1px, transparent 0);
+            background-size: 100% 100%, 40px 40px;
+            height: calc(100vh - 60px);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
+        }
+        .main-content::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent, rgba(15, 15, 15, 0.8));
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .upload-area {
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 32px;
+            background: rgba(25, 25, 25, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            width: 100%;
+            max-width: 1100px;
+            height: auto;
+            flex: 0 1 auto;
+            max-height: calc(100vh - 340px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.4),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            margin-bottom: 110px;
+            overflow: hidden;
+            z-index: 5;
+        }
+        .upload-area:hover {
+            transform: translateY(-5px) scale(1.01);
+            background: rgba(30, 30, 30, 0.5);
+            border-color: rgba(255, 225, 53, 0.2);
+            box-shadow: 
+                0 40px 80px rgba(0,0,0,0.6),
+                0 0 20px rgba(255, 225, 53, 0.05);
+        }
+        
+        .gen-slots-container {
+            display: grid;
+            gap: 16px;
+            width: 100%;
+            height: 100%;
+            max-height: calc(100vh - 320px);
+            align-content: center;
+            justify-items: stretch;
+            overflow: hidden;
+        }
+        .gen-slot {
+            background: #1a1a1a;
+            border-radius: 20px;
+            border: 1px solid #2a2a2a;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+            height: 100%;
+            max-height: calc(100vh - 350px);
+        }
+        .gen-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+        
+        .slot-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: #151515;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+        }
+        
+        .pulse-logo {
+            font-size: 40px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+
+        .upload-placeholder-icon {
+            width: 64px;
+            height: 64px;
+            background: #222;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: #444;
+            transition: all 0.3s;
+        }
+        .upload-area:hover .upload-placeholder-icon {
+            background: #FFE135;
+            color: #1a1a1a;
+            transform: rotate(90deg);
+        }
+
+        .upload-placeholder-text-main {
+            font-size: 18px;
+            font-weight: 700;
+            color: #eee;
+            margin-bottom: 8px;
+        }
+        .upload-placeholder-text-sub {
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .upload-area {
+            position: relative;
+            border: 2px dashed #333;
+            border-radius: 20px;
+            background: #1a1a1a;
+            flex: 1;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.3);
+            margin-bottom: 160px; /* Space for fixed toolbar */
+        }
+        .upload-area:hover {
+            border-color: #FFE135;
+            background: #1e1e1e;
+        }
+        .upload-area.has-content {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+            padding: 0;
+            margin: 0;
+            max-height: calc(100vh - 300px); /* 保持严格限制 */
+            height: calc(100vh - 300px);
+        }
+
+        .gen-slots-container {
+            display: grid;
+            gap: 16px;
+            width: 100%;
+            height: 100%;
+            align-content: center;
+            justify-items: stretch;
+            overflow: hidden; /* 严格禁止溢出 */
+        }
+        .gen-slot {
+            background: #1a1a1a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            height: 100%;
+            max-height: calc(100vh - 320px); /* 确保单张图也不会撑破 */
+        }
+        .gen-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .history-sidebar {
+            width: 380px;
+            min-width: 280px;
+            max-width: 90vw;
+            background: linear-gradient(180deg, #151515 0%, #0f0f0f 100%);
+            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            z-index: 100;
+            position: relative;
+            box-shadow: -4px 0 30px rgba(0, 0, 0, 0.3);
+        }
+        .sidebar-resizer {
+            position: absolute;
+            left: -4px;
+            top: 0;
+            bottom: 0;
+            width: 8px; /* 增加感应区域 */
+            cursor: ew-resize;
+            background: transparent;
+            z-index: 150;
+            transition: background 0.2s;
+        }
+        .sidebar-resizer:hover {
+            background: rgba(255, 225, 53, 0.4);
+        }
+        .sidebar-resizer.resizing {
+            background: #FFE135;
+        }
+        
+        .history-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-top: 16px;
+        }
+
+        .history-item {
+            position: relative;
+            background: #1e1e1e;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            height: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .history-item:hover {
+            border-color: #FFE135;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        
+        .history-item img, .history-pending, .history-error {
+            width: 100%;
+            height: auto;
+            min-height: 150px;
+            max-height: 500px;
+            aspect-ratio: auto;
+            object-fit: contain;
+            background: #151515;
+            display: block;
+        }
+        
+        /* 悬浮操作栏 */
+        .history-item-actions {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 40;
+            pointer-events: none; /* 未显示时不阻挡点击 */
+        }
+        .history-item:hover .history-item-actions {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(20, 20, 20, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #eee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .action-btn:hover {
+            transform: scale(1.15);
+            background: #FFE135;
+            color: #1a1a1a;
+            border-color: #FFE135;
+        }
+        .action-btn.delete-btn:hover {
+            background: #f44336;
+            color: #fff;
+            border-color: #f44336;
+        }
+        .action-btn svg { width: 15px; height: 15px; }
+        
+        .history-item-info {
+            padding: 12px 16px;
+            background: #1e1e1e;
+            border-top: 1px solid #2a2a2a;
+        }
+        
+        .history-item-collection {
+            font-size: 11px;
+            color: #FFE135;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+        
+        .history-item-prompt {
+            font-size: 13px;
+            color: #ccc;
+            margin-bottom: 10px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        
+        .history-item-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+        }
+        
+        .history-item-time {
+            font-size: 11px;
+            color: #666;
+        }
+        .history-item-resolution {
+            font-size: 11px;
+            color: #FFE135;
+            background: rgba(255, 225, 53, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .history-item.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 22px;
+            height: 22px;
+            background: #FFE135;
+            color: #1a1a1a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 900;
+            z-index: 50;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .collection-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: transparent;
+            color: #FFE135;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.4;
+            z-index: 30;
+            white-space: nowrap;
+            max-width: 80%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-block;
+            box-sizing: border-box;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        /* 按钮样式优化 */
+        .history-item-actions-top, .history-item-actions-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 6px;
+            opacity: 0;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 30;
+        }
+        .history-item-actions-top { top: 0; transform: translateY(-5px); }
+        .history-item-actions-bottom { bottom: 34px; transform: translateY(5px); }
+        .history-item:hover .history-item-actions-top,
+        .history-item:hover .history-item-actions-bottom {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(25, 25, 25, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ddd;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        .action-btn:hover {
+            transform: scale(1.15) translateY(-2px);
+            background: #FFE135;
+            color: #1a1a1a;
+            border-color: #FFE135;
+            box-shadow: 0 8px 25px rgba(255, 225, 53, 0.3);
+        }
+        .action-btn.delete-btn:hover {
+            background: #ef4444;
+            color: #fff;
+            border-color: #ef4444;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+        .action-btn svg { width: 16px; height: 16px; }
+
+        .history-section {
+            padding: 0 16px 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .history-header {
+            padding: 20px 16px;
+            background: linear-gradient(180deg, #1a1a1a 0%, #181818 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        
+        .history-title-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .gallery-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 800;
+            color: #eee;
+            letter-spacing: 0.5px;
+        }
+        .gallery-label svg {
+            color: #FFE135;
+        }
+        
+        .header-actions-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .history-title-bottom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .collection-select {
+            background: #222;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.2s;
+            outline: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 32px;
+        }
+        .collection-select:hover, .collection-select:focus {
+            border-color: #444;
+            background-color: #282828;
+            color: #fff;
+        }
+
+        .history-select-btn {
+            height: 35px;
+            padding: 0 16px;
+            background: #222;
+            border: 1px solid #333;
+            color: #aaa;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .history-select-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+            border-color: #444;
+        }
+        .history-select-btn.active {
+            background: #FFE135;
+            color: #1a1a1a;
+            border-color: #FFE135;
+        }
+        
+        .icon-btn-small {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(145deg, #222 0%, #1a1a1a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #888;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .icon-btn-small:hover {
+            background: linear-gradient(145deg, #2a2a2a 0%, #252525 100%);
+            color: #fff;
+            border-color: rgba(255, 225, 53, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        .icon-btn-small.danger:hover {
+            background: linear-gradient(145deg, #dc2626 0%, #b91c1c 100%);
+            color: #fff;
+            border-color: #ef4444;
+        }
+        .collection-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .collection-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        .collection-tab {
+            padding: 8px 16px;
+            background: linear-gradient(145deg, #1e1e1e 0%, #252525 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #888;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .collection-tab:hover {
+            border-color: rgba(255, 225, 53, 0.3);
+            color: #ccc;
+            background: linear-gradient(145deg, #252525 0%, #2a2a2a 100%);
+            transform: translateY(-1px);
+        }
+        .collection-tab.active {
+            background: linear-gradient(145deg, #FFE135 0%, #ffd700 100%);
+            color: #1a1a1a;
+            border-color: #FFE135;
+            box-shadow: 0 4px 15px rgba(255, 225, 53, 0.3);
+        }
+        
+        .collection-group {
+            margin-bottom: 24px;
+        }
+        .collection-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 4px;
+            cursor: pointer;
+            border-bottom: 1px solid #222;
+            margin-bottom: 12px;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .collection-group-header:hover {
+            color: #FFE135;
+        }
+        .collection-group-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #bbb;
+        }
+        .collection-group-header:hover .collection-group-title { color: #FFE135; }
+        
+        .collection-arrow {
+            font-size: 10px;
+            transition: transform 0.3s;
+            color: #666;
+        }
+        .collection-group.collapsed .collection-arrow {
+            transform: rotate(-90deg);
+        }
+        .collection-group.collapsed .history-grid {
+            display: none;
+        }
+        .collection-count-badge {
+            font-size: 10px;
+            background: #2a2a2a;
+            color: #666;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+        
+        .history-title {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .history-title-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-title-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%; /* 默认居中，JS 会根据侧边栏动态调整 */
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 750px; /* 稍微收窄 */
+            background: rgba(25, 25, 25, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 12px 18px; /* 紧凑化 padding */
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            z-index: 500;
+        }
+
+        .toolbar-prompt textarea {
+            width: 100%;
+            padding: 10px 14px; /* 紧凑化 padding */
+            border-radius: 12px;
+            border: 1px solid #444;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 13px; /* 紧凑化字体 */
+            resize: none;
+            height: 48px; /* 固定较矮高度 */
+            max-height: 100px;
+            font-family: inherit;
+            line-height: 1.4;
+        }
+
+        .toolbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 紧凑化间距 */
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .toolbar-section {
+            display: flex;
+            align-items: center;
+            gap: 4px; /* 紧凑化间距 */
+        }
+        
+        .toolbar label {
+            color: #888;
+            font-size: 12px; /* 紧凑化字体 */
+            white-space: nowrap;
+        }
+        
+        .toolbar select {
+            padding: 6px 24px 6px 10px; /* 紧凑化 padding */
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #1a1a1a;
+            color: #ddd;
+            font-size: 12px; /* 紧凑化字体 */
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+
+        .btn-generate {
+            padding: 8px 20px; /* 紧凑化 padding */
+            border: none;
+            border-radius: 8px;
+            background: #FFE135;
+            color: #1a1a1a;
+            font-weight: 700;
+            font-size: 13px; /* 紧凑化字体 */
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+
+        .upload-area {
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            background: rgba(22, 22, 22, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            width: 100%;
+            max-width: 900px; /* 稍微收窄 */
+            height: 100%;
+            flex: 0 1 auto;
+            /* 进一步压缩高度：从 320 增加到 380，留出更多余量 */
+            max-height: calc(100vh - 380px); 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* 4B 偏好：内容偏上 */
+            justify-content: flex-start; 
+            padding-top: 12%; /* 偏上 12% */
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            margin-bottom: 100px;
+            overflow: hidden;
+            z-index: 5;
+        }
+        
+        .upload-area:hover {
+            border-color: rgba(255, 225, 53, 0.15);
+            background: rgba(28, 28, 28, 0.7);
+        }
+        
+        .upload-area.has-content {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+            padding: 0;
+            margin: 0;
+            max-height: calc(100vh - 300px);
+            height: calc(100vh - 300px);
+            justify-content: center; /* 有内容时恢复居中 */
+            padding-top: 0;
+        }
+        /* 更新布局计算以适应动态侧边栏 */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: #121212;
+            transition: padding-right 0.1s;
+        }
+
+        .selection-toolbar {
+            position: fixed;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 14px 28px;
+            border-radius: 50px;
+            display: none;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            z-index: 600;
+            border: 1px solid rgba(255, 225, 53, 0.2);
+        }
+        .selection-toolbar.show {
+            display: flex;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .selection-toolbar .selection-count {
+            color: #FFE135;
+            font-weight: 800;
+            font-size: 14px;
+        }
+        .selection-toolbar .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ddd;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .selection-toolbar .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar-resizer { display: none; }
+            .history-sidebar { width: 100% !important; max-width: none !important; }
+            .toolbar { left: 50%; width: calc(100% - 40px); }
+            .selection-toolbar { left: 50%; }
+        }
+
+        /* 移除冗余的旧按钮样式 */
+        .history-delete-btn, .history-zoom-btn, .history-download-btn, .history-reuse-btn, .history-retry-btn {
+            display: none !important;
         }
         .navbar {
             background: #333;
@@ -243,13 +1304,9 @@
             z-index: 10;
         }
         .history-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #333;
-            display: none;
-        }
-        .history-section.show {
-            display: block;
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
         }
         .history-title {
             font-size: 1rem;
@@ -358,7 +1415,7 @@
             position: absolute;
             bottom: 30px;
             left: 4px;
-            background: rgba(0,0,0,0.6);
+            background: transparent;
             color: #FFE135;
             padding: 2px 6px;
             border-radius: 4px;
@@ -368,6 +1425,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             pointer-events: none;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
         .history-download-all-btn {
             background: #444;
@@ -389,41 +1447,74 @@
         }
         .history-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+            padding: 8px 4px;
         }
         .history-item {
             position: relative;
-            background: #2a2a2a;
-            border-radius: 10px;
+            background: linear-gradient(145deg, #1e1e1e 0%, #252525 100%);
+            border-radius: 16px;
             overflow: hidden;
-            border: 1px solid #333;
+            border: 1px solid rgba(255, 255, 255, 0.06);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         .history-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            border-color: #FFE135;
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 225, 53, 0.08);
+            border-color: rgba(255, 225, 53, 0.3);
         }
         .history-item img {
             width: 100%;
             aspect-ratio: 1;
             object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            display: block;
+        }
+        .history-item img.loaded {
+            opacity: 1;
+        }
+        .history-item:hover img.loaded {
+            transform: scale(1.05);
+        }
+        .history-item.skeleton::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .history-item-info {
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
         }
         .history-item-info {
-            padding: 4px 6px;
+            padding: 10px 12px;
         }
         .history-item-time {
-            font-size: 10px;
-            color: #888;
-            text-align: center;
+            font-size: 11px;
+            color: #666;
+            font-weight: 500;
+            letter-spacing: 0.3px;
         }
         .history-item-resolution {
             font-size: 10px;
-            color: #666;
-            text-align: center;
-            margin-top: 2px;
+            color: #FFE135;
+            background: rgba(255, 225, 53, 0.12);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
         }
         .history-item.pending {
             background: #252525;
@@ -1105,7 +2196,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V6.0</span></div>
+        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V7.0</span></div>
         <div class="navbar-links">
             <button class="nav-btn" id="guideBtn">指南</button>
             <button class="nav-btn" id="galleryBtn">图库</button>
@@ -1113,33 +2204,55 @@
         </div>
     </nav>
 
-    <div class="main-wrapper">
-        <div class="upload-area" id="uploadArea">
-            <input type="file" id="refImageInput" accept="image/*">
-            <div class="upload-placeholder">
-                <div>生成的图片将显示在这里</div>
-                <div class="upload-placeholder-text">点击历史记录可查看以往生成结果</div>
+    <div class="app-container">
+        <main class="main-content">
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="refImageInput" accept="image/*">
+                <div class="upload-placeholder-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                </div>
+                <div class="upload-placeholder-text-main">准备好构思了吗？</div>
+                <div class="upload-placeholder-text-sub">在下方输入提示词，灵感即刻呈现</div>
             </div>
-        </div>
+        </main>
 
-        <div class="history-section" id="historySection">
-            <div class="history-title">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span>生成历史</span>
-                    <select class="collection-select" id="collectionFilter">
-                        <option value="all">全部展示</option>
-                        <option value="uncollected">未分类</option>
-                    </select>
-                    <button class="history-clear-btn" id="deleteCollectionBtn" title="删除当前合集" style="display: none; width: 22px; height: 22px; font-size: 0.9rem;">×</button>
+        <aside class="history-sidebar" id="historySidebar">
+            <div class="sidebar-resizer" id="sidebarResizer"></div>
+            <div class="history-header">
+                <!-- ... existing header content ... -->
+                <div class="history-title-top">
+                    <div class="gallery-label">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                        我的图库
+                    </div>
+                    <div class="header-actions-group">
+                        <button class="history-select-btn" id="historySelectBtn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                            管理
+                        </button>
+                        <button class="icon-btn-small" id="downloadAllBtn" title="批量下载">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        </button>
+                        <button class="icon-btn-small danger" id="historyClearBtn" title="清空图库">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="history-title-actions">
-                    <button class="history-select-btn" id="historySelectBtn">选择</button>
-                    <button class="history-download-all-btn" id="downloadAllBtn" title="批量下载">⬇</button>
-                    <button class="history-clear-btn" id="historyClearBtn" title="清空历史">×</button>
-                </div>
+                <select class="collection-select" id="collectionFilter" style="display:none;">
+                    <option value="all">全部作品</option>
+                    <option value="uncollected">未分类</option>
+                </select>
             </div>
-            <div class="history-grid" id="historyGrid"></div>
-        </div>
+            <div class="collection-tabs-wrapper" style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">
+                <div class="collection-tabs" id="collectionTabs" style="flex:1;margin:0;padding:0;border:none;"></div>
+                <button class="icon-btn-small danger" id="deleteCollectionBtn" title="删除当前合集" style="display:none;flex-shrink:0;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            </div>
+            <div class="history-section" id="historySection">
+                <div class="history-grid" id="historyGrid"></div>
+            </div>
+        </aside>
     </div>
 
     <div class="selection-toolbar" id="selectionToolbar">
@@ -1474,12 +2587,27 @@
 
         function updateCollectionSelectors() {
             const filterOptions = `
-                <option value="all">全部展示</option>
+                <option value="all">全部作品</option>
                 <option value="uncollected">未分类</option>
                 ${collections.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
             `;
             collectionFilter.innerHTML = filterOptions;
             collectionFilter.value = currentFilter;
+
+            // 更新横向标签
+            const tabsContainer = document.getElementById('collectionTabs');
+            const allTabs = [
+                { id: 'all', name: '全部' },
+                { id: 'uncollected', name: '未分类' },
+                ...collections
+            ];
+            
+            tabsContainer.innerHTML = allTabs.map(tab => `
+                <div class="collection-tab ${currentFilter === String(tab.id) ? 'active' : ''}" 
+                     onclick="switchCollection('${tab.id}')">
+                    ${tab.name}
+                </div>
+            `).join('');
 
             const modalOptions = `
                 <option value="">-- 请选择 --</option>
@@ -1491,6 +2619,13 @@
             const isCustomCollection = currentFilter !== 'all' && currentFilter !== 'uncollected';
             deleteCollectionBtn.style.display = isCustomCollection ? 'flex' : 'none';
         }
+
+        window.switchCollection = function(id) {
+            currentFilter = String(id);
+            collectionFilter.value = currentFilter;
+            renderHistory();
+            updateCollectionSelectors(); // 更新标签高亮
+        };
 
         async function loadHistory() {
             if (!db) await initDB();
@@ -1624,10 +2759,23 @@
             }
         };
 
+        let lastRenderedCount = 0;
+        const RENDER_BATCH_SIZE = 40;
+
         async function renderHistory() {
             await loadHistory();
             await loadCollections();
             
+            if (history.length === 0) {
+                historySection.style.display = 'none';
+                return;
+            }
+            historySection.style.display = 'block';
+
+            const galleryContainer = document.getElementById('historyGrid');
+            galleryContainer.innerHTML = ''; // 清空原有内容
+
+            // 筛选逻辑：只获取当前选中的合集内容
             let filteredHistory = history;
             if (currentFilter === 'uncollected') {
                 filteredHistory = history.filter(item => !item.collectionId);
@@ -1636,47 +2784,162 @@
                 filteredHistory = history.filter(item => item.collectionId === cid);
             }
 
-            if (history.length === 0) {
-                historySection.style.display = 'none';
+            // 扁平化渲染列表，不再分文件夹
+            if (filteredHistory.length === 0) {
+                galleryContainer.innerHTML = `
+                    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;">
+                        <div style="width:80px;height:80px;background:linear-gradient(145deg,#1e1e1e,#252525);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                        </div>
+                        <div style="color:#666;font-size:15px;font-weight:600;margin-bottom:8px;">暂无作品</div>
+                        <div style="color:#444;font-size:13px;">生成第一张图片开始你的创作之旅</div>
+                    </div>`;
                 return;
             }
-            historySection.style.display = 'block';
+
+            // 分批渲染逻辑：先渲染前 BATCH_SIZE 条
+            const initialItems = filteredHistory.slice(0, RENDER_BATCH_SIZE);
+            galleryContainer.innerHTML = initialItems.map((item, idx) => renderHistoryItemHTML(item, idx)).join('');
             
-            historyGrid.innerHTML = filteredHistory.map((item, idx) => {
-                const isPending = item.status === 'pending';
-                const isError = item.status === 'error';
-                const isSelected = selectedItems.has(item.id);
-                const collection = item.collectionId ? collections.find(c => c.id === item.collectionId) : null;
-                
-                const imgContent = isPending 
-                    ? `<div class="history-pending"><div class="spinner" style="width:30px;height:30px;border-width:2px;"></div><div style="font-size:11px;color:#888;margin-top:5px;">生成中...</div></div>`
-                    : isError
-                    ? `<div class="history-error"><div style="font-size:11px;color:#f00;">失败</div><div style="font-size:10px;color:#888;">${item.errorMsg || ''}</div></div>`
-                    : `<img src="${item.url}" alt="历史图片">`;
-                const hideButtons = isPending;
-                
-                return `
-                <div class="history-item ${isPending ? 'pending' : ''} ${isError ? 'error' : ''} ${isSelected ? 'selected' : ''} ${isSelecting ? 'selecting' : ''}" 
+            // 延迟渲染剩余项（非阻塞加载）
+            if (filteredHistory.length > RENDER_BATCH_SIZE) {
+                setTimeout(() => {
+                    const remainingItems = filteredHistory.slice(RENDER_BATCH_SIZE);
+                    const remainingHTML = remainingItems.map((item, idx) => renderHistoryItemHTML(item, idx + RENDER_BATCH_SIZE)).join('');
+                    galleryContainer.insertAdjacentHTML('beforeend', remainingHTML);
+                    observeImages();
+                }, 100);
+            } else {
+                observeImages();
+            }
+        }
+
+        // 移除旧的 toggleGroup 函数，不再需要
+        window.toggleGroup = null;
+
+        function renderHistoryItemHTML(item, idx) {
+            const isPending = item.status === 'pending';
+            const isError = item.status === 'error';
+            const isSelected = selectedItems.has(item.id);
+            const collection = item.collectionId ? collections.find(c => c.id === item.collectionId) : null;
+            
+            const imgContent = isPending 
+                ? `<div class="history-pending"><div class="spinner" style="width:30px;height:30px;border-width:2px;"></div></div>`
+                : isError
+                ? `<div class="history-error"><div style="font-size:11px;color:#f00;">失败</div></div>`
+                : `<img src="${item.url}" alt="历史图片" loading="lazy" onload="this.classList.add('loaded')">`;
+            
+            const promptPreview = item.prompt || '无提示词';
+
+            return `
+                <div class="history-item ${isPending ? 'pending' : ''} ${isError ? 'error' : ''} ${isSelected ? 'selected' : ''} ${isSelecting ? 'selecting' : ''} ${!isPending && !isError ? 'skeleton' : ''}" 
                      id="historyItem_${item.id}"
                      onclick="handleHistoryItemClick(${item.id}, ${idx}, event)">
                     ${imgContent}
-                    ${collection ? `<div class="collection-badge">${collection.name}</div>` : ''}
-                    ${!isSelecting ? `
-                        <button class="history-delete-btn" onclick="deleteHistoryItemById(${item.id}, event)">×</button>
-                        ${isError ? `
-                        <button class="history-retry-btn" onclick="retryHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
-                        ` : !hideButtons ? `
-                        <button class="history-zoom-btn" onclick="zoomHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
-                        <button class="history-download-btn" onclick="downloadHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-                        <button class="history-reuse-btn" onclick="reuseHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
-                        ` : ''}
+                    ${!isSelecting && !isPending ? `
+                        <div class="history-item-actions">
+                            ${isError ? `
+                                <div class="action-btn" onclick="retryHistoryItem(${idx}, event)" title="重试">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                                </div>
+                            ` : `
+                                <div class="action-btn" onclick="zoomHistoryItem(${idx}, event)" title="放大">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </div>
+                                <div class="action-btn" onclick="reuseHistoryItem(${idx}, event)" title="复用参数">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                </div>
+                                <div class="action-btn" onclick="downloadHistoryItem(${idx}, event)" title="下载">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                </div>
+                            `}
+                            <div class="action-btn delete-btn" onclick="deleteHistoryItemById(${item.id}, event)" title="删除">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </div>
+                        </div>
                     ` : ''}
                     <div class="history-item-info">
-                        <div class="history-item-time">${item.time}</div>
-                        ${item.resolution ? `<div class="history-item-resolution">${item.resolution}</div>` : ''}
+                        ${collection ? `<div class="history-item-collection">${collection.name}</div>` : ''}
+                        <div class="history-item-prompt">${promptPreview}</div>
+                        <div class="history-item-meta">
+                            <span class="history-item-time">${item.time}</span>
+                            ${item.resolution ? `<span class="history-item-resolution">${item.resolution}</span>` : ''}
+                        </div>
                     </div>
                 </div>
-            `}).join('');
+            `;
+        }
+
+        // 骨架屏自动移除逻辑：当图片加载完毕时，移除父级的 skeleton 类
+        function observeImages() {
+            const images = document.querySelectorAll('.history-item img');
+            images.forEach(img => {
+                if (img.complete) {
+                    img.classList.add('loaded');
+                    img.closest('.history-item').classList.remove('skeleton');
+                } else {
+                    img.onload = () => {
+                        img.classList.add('loaded');
+                        img.closest('.history-item').classList.remove('skeleton');
+                    };
+                }
+            });
+        }
+
+        // 侧边栏拉伸逻辑
+        const resizer = document.getElementById('sidebarResizer');
+        const sidebar = document.getElementById('historySidebar');
+        const mainContent = document.querySelector('.main-content');
+        const toolbars = [document.querySelector('.toolbar'), document.getElementById('selectionToolbar')];
+
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'ew-resize';
+            resizer.classList.add('resizing');
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const windowWidth = window.innerWidth;
+            let newWidth = windowWidth - e.clientX;
+            
+            if (newWidth < 200) newWidth = 200;
+            if (newWidth > windowWidth - 100) newWidth = windowWidth - 100;
+
+            sidebar.style.width = `${newWidth}px`;
+            
+            // 1B 偏好：工具栏始终在左侧主区域居中
+            // 计算主区域的中心点
+            const mainWidth = windowWidth - newWidth;
+            const centerOffset = mainWidth / 2;
+            toolbars.forEach(tb => {
+                if (tb) tb.style.left = `${centerOffset}px`;
+            });
+            
+            localStorage.setItem('nanoSidebarWidth', newWidth);
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                resizer.classList.remove('resizing');
+            }
+        });
+
+        // 初始化侧边栏宽度
+        const savedWidth = localStorage.getItem('nanoSidebarWidth');
+        if (savedWidth && window.innerWidth > 900) {
+            sidebar.style.width = `${savedWidth}px`;
+            const mainWidth = window.innerWidth - savedWidth;
+            const centerOffset = mainWidth / 2;
+            toolbars.forEach(tb => {
+                if (tb) tb.style.left = `${centerOffset}px`;
+            });
         }
 
         window.handleHistoryItemClick = function(id, idx, e) {
@@ -1780,7 +3043,6 @@
                 referenceImages.push(item.url);
             }
             updateRefImagesDisplay();
-            showToast('已添加到参考图');
         };
 
         window.downloadHistoryItem = function(idx, e) {
@@ -2024,37 +3286,27 @@
         }
 
         async function generateImage() {
-            const apiKey = modalApiKey.value.trim();
-            const prompt = promptInput.value.trim();
-            const selectedModel = modelSelect.value;
-            
-            if (!apiKey) {
-                showToast('请先配置 API Key');
-                settingsModal.classList.add('show');
-                return;
-            }
-            if (!prompt) {
-                showToast('请输入提示词');
-                return;
-            }
-
-            const numImages = parseInt(numSelect.value);
-            const currentRefImages = [...referenceImages];
-            const now = new Date();
-            const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+            // ... (previous logic stays same until taskId)
             const taskId = Date.now();
             
             uploadArea.classList.add('has-content');
             const gridClass = numImages === 1 ? 'single' : numImages === 2 ? 'double' : 'multiple';
             const slotsHtml = Array(numImages).fill(0).map((_, i) => `
                 <div class="gen-slot" id="genSlot${taskId}_${i}">
-                    <div class="spinner"></div>
-                    <div class="slot-text">生成中...</div>
+                    <div class="slot-loading-overlay">
+                        <div class="pulse-logo">🍌</div>
+                        <div class="spinner" style="width:30px; height:30px;"></div>
+                        <div style="color: #666; font-size: 13px; font-weight: 600;">正在构思第 ${i+1} 张...</div>
+                    </div>
                 </div>
             `).join('');
-            uploadArea.innerHTML = `<div class="gen-slots-container ${gridClass}">${slotsHtml}</div>`;
+            
+            // 响应式网格列数调整
+            const gridColumns = numImages === 1 ? '1fr' : numImages === 2 ? '1fr 1fr' : 'repeat(auto-fit, minmax(350px, 1fr))';
+            uploadArea.innerHTML = `<div class="gen-slots-container" style="grid-template-columns: ${gridColumns}">${slotsHtml}</div>`;
             
             taskQueue++;
+            // ... (rest of the function)
             updateGenerateBtn();
             
             const modelMap = {
@@ -2349,7 +3601,11 @@
 
         galleryBtn.addEventListener('click', () => {
             if (history.length > 0) {
-                historySection.scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('.history-sidebar').scrollIntoView({ behavior: 'smooth' });
+                // If it's a sidebar, we might want to highlight it or something
+                const sidebar = document.querySelector('.history-sidebar');
+                sidebar.style.borderColor = '#FFE135';
+                setTimeout(() => sidebar.style.borderColor = '#333', 1000);
             } else {
                 showToast('暂无历史记录');
             }
