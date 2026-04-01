@@ -2177,7 +2177,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V7.1</span></div>
+        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V7.2</span></div>
         <div class="navbar-links">
             <button class="nav-btn" id="guideBtn">指南</button>
             <button class="nav-btn" id="settingsBtn">设置</button>
@@ -3302,11 +3302,26 @@
         }
 
         async function generateImage() {
-            // ... (previous logic stays same until taskId)
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                showToast('请输入提示词');
+                return;
+            }
+
+            const apiKey = localStorage.getItem('nanoApiKey');
+            if (!apiKey) {
+                showToast('请先配置 API Key');
+                settingsModal.classList.add('show');
+                return;
+            }
+
+            const selectedModel = modelSelect.value;
+            const numImages = parseInt(numSelect.value);
+            const currentRefImages = [...referenceImages];
+            const timeStr = new Date().toLocaleString('zh-CN');
             const taskId = Date.now();
             
             uploadArea.classList.add('has-content');
-            const gridClass = numImages === 1 ? 'single' : numImages === 2 ? 'double' : 'multiple';
             const slotsHtml = Array(numImages).fill(0).map((_, i) => `
                 <div class="gen-slot" id="genSlot${taskId}_${i}">
                     <div class="slot-loading-overlay">
@@ -3334,7 +3349,7 @@
             const apiModel = modelMap[selectedModel] || modelMap['nano-banana'];
             const apiUrl = `https://newapi.asia/v1beta/models/${apiModel}:generateContent?key=${apiKey}`;
             
-            if (referenceImages.length > 0 && !modelsSupportImageInput.includes(apiModel)) {
+            if (currentRefImages.length > 0 && !modelsSupportImageInput.includes(apiModel)) {
                 showToast('图生图请使用 nano-banana-2 或 nano-banana-pro 模型');
                 runningTasks--;
                 taskQueue--;
@@ -3370,7 +3385,7 @@
                 const slot = document.getElementById(`genSlot${taskId}_${index}`);
                 
                 let requestBody;
-                if (referenceImages.length > 0 && modelsSupportImageInput.includes(apiModel)) {
+                if (currentRefImages.length > 0 && modelsSupportImageInput.includes(apiModel)) {
                     const parts = [];
                     const processImage = (img) => {
                         return new Promise((resolve) => {
@@ -3405,7 +3420,7 @@
                             imgEl.src = img;
                         });
                     };
-                    const imageParts = await Promise.all(referenceImages.map(processImage));
+                    const imageParts = await Promise.all(currentRefImages.map(processImage));
                     parts.push(...imageParts);
                     parts.push({ text: prompt });
                     requestBody = {
