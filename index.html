@@ -280,6 +280,94 @@
         .history-title-actions {
             display: flex;
             gap: 8px;
+            align-items: center;
+        }
+        .history-select-btn {
+            background: #444;
+            border: none;
+            color: #888;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .history-select-btn.active {
+            background: #FFE135;
+            color: #333;
+        }
+        .collection-select {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            max-width: 120px;
+        }
+        .history-item.selecting {
+            cursor: pointer;
+        }
+        .history-item.selected {
+            border-color: #FFE135;
+            box-shadow: 0 0 0 2px #FFE135;
+        }
+        .history-item.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: #FFE135;
+            color: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 20;
+        }
+        .selection-toolbar {
+            position: fixed;
+            bottom: 220px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            padding: 10px 20px;
+            border-radius: 12px;
+            display: none;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 150;
+            border: 1px solid #444;
+        }
+        .selection-toolbar.show {
+            display: flex;
+        }
+        .selection-count {
+            font-size: 13px;
+            color: #FFE135;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .collection-badge {
+            position: absolute;
+            bottom: 30px;
+            left: 4px;
+            background: rgba(0,0,0,0.6);
+            color: #FFE135;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            max-width: 80%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            pointer-events: none;
         }
         .history-download-all-btn {
             background: #444;
@@ -1017,7 +1105,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V5.1</span></div>
+        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V6.0</span></div>
         <div class="navbar-links">
             <button class="nav-btn" id="guideBtn">指南</button>
             <button class="nav-btn" id="galleryBtn">图库</button>
@@ -1036,13 +1124,49 @@
 
         <div class="history-section" id="historySection">
             <div class="history-title">
-                <span>生成历史</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>生成历史</span>
+                    <select class="collection-select" id="collectionFilter">
+                        <option value="all">全部展示</option>
+                        <option value="uncollected">未分类</option>
+                    </select>
+                    <button class="history-clear-btn" id="deleteCollectionBtn" title="删除当前合集" style="display: none; width: 22px; height: 22px; font-size: 0.9rem;">×</button>
+                </div>
                 <div class="history-title-actions">
+                    <button class="history-select-btn" id="historySelectBtn">选择</button>
                     <button class="history-download-all-btn" id="downloadAllBtn" title="批量下载">⬇</button>
                     <button class="history-clear-btn" id="historyClearBtn" title="清空历史">×</button>
                 </div>
             </div>
             <div class="history-grid" id="historyGrid"></div>
+        </div>
+    </div>
+
+    <div class="selection-toolbar" id="selectionToolbar">
+        <span class="selection-count" id="selectionCount">已选中 0 项</span>
+        <button class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="cancelSelectBtn">取消</button>
+        <button class="btn btn-primary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="addToCollectionBtn">加入合集</button>
+    </div>
+
+    <div class="modal-overlay" id="collectionModal">
+        <div class="modal">
+            <div class="modal-title">
+                加入合集
+                <button class="modal-close" id="collectionModalClose">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>选择现有合集</label>
+                <select id="existingCollectionSelect"></select>
+            </div>
+            <div style="text-align: center; color: #666; margin: 10px 0;">— 或者 —</div>
+            <div class="form-group">
+                <label>创建新合集</label>
+                <input type="text" id="newCollectionName" placeholder="输入合集名称">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="collectionCancelBtn">取消</button>
+                <button class="btn btn-primary" id="collectionSaveBtn">确定</button>
+            </div>
         </div>
     </div>
 
@@ -1221,15 +1345,34 @@
         const numSelect = document.getElementById('numSelect');
         const refImagesUpload = document.getElementById('refImagesUpload');
         const refImagesInput = document.getElementById('refImagesInput');
+        const historySelectBtn = document.getElementById('historySelectBtn');
+        const collectionFilter = document.getElementById('collectionFilter');
+        const selectionToolbar = document.getElementById('selectionToolbar');
+        const selectionCount = document.getElementById('selectionCount');
+        const cancelSelectBtn = document.getElementById('cancelSelectBtn');
+        const addToCollectionBtn = document.getElementById('addToCollectionBtn');
+        const collectionModal = document.getElementById('collectionModal');
+        const existingCollectionSelect = document.getElementById('existingCollectionSelect');
+        const newCollectionName = document.getElementById('newCollectionName');
+        const collectionSaveBtn = document.getElementById('collectionSaveBtn');
+        const collectionCancelBtn = document.getElementById('collectionCancelBtn');
+        const collectionModalClose = document.getElementById('collectionModalClose');
+        const deleteCollectionBtn = document.getElementById('deleteCollectionBtn');
 
         let selectedRatio = '1:1';
         let runningTasks = 0;
         let taskQueue = 0;
         let referenceImages = [];
         let history = [];
+        let collections = [];
+        let isSelecting = false;
+        let selectedItems = new Set();
+        let currentFilter = 'all';
+
         const DB_NAME = 'NanoBananaDB';
-        const DB_VERSION = 1;
+        const DB_VERSION = 3;
         const STORE_NAME = 'images';
+        const COLLECTION_STORE = 'collections';
         let db = null;
 
         function initDB() {
@@ -1245,8 +1388,108 @@
                     if (!database.objectStoreNames.contains(STORE_NAME)) {
                         database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
                     }
+                    if (!database.objectStoreNames.contains(COLLECTION_STORE)) {
+                        database.createObjectStore(COLLECTION_STORE, { keyPath: 'id', autoIncrement: true });
+                    }
+                    
+                    const store = e.currentTarget.transaction.objectStore(STORE_NAME);
+                    if (!store.indexNames.contains('collectionId')) {
+                        store.createIndex('collectionId', 'collectionId', { unique: false });
+                    }
                 };
             });
+        }
+
+        async function loadCollections() {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(COLLECTION_STORE, 'readonly');
+                const store = tx.objectStore(COLLECTION_STORE);
+                const request = store.getAll();
+                request.onsuccess = () => {
+                    collections = request.result;
+                    updateCollectionSelectors();
+                    resolve(collections);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function createCollection(name) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(COLLECTION_STORE, 'readwrite');
+                const store = tx.objectStore(COLLECTION_STORE);
+                const request = store.add({ name, createdAt: Date.now() });
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function deleteCollection(id) {
+            if (!db) await initDB();
+            const tx = db.transaction([COLLECTION_STORE, STORE_NAME], 'readwrite');
+            const collectionStore = tx.objectStore(COLLECTION_STORE);
+            const imageStore = tx.objectStore(STORE_NAME);
+            
+            // 1. Delete collection
+            collectionStore.delete(id);
+            
+            // 2. Clear collectionId for images in this collection
+            const index = imageStore.index('collectionId');
+            const request = index.getAll(id);
+            request.onsuccess = () => {
+                const images = request.result;
+                images.forEach(img => {
+                    img.collectionId = null;
+                    imageStore.put(img);
+                });
+            };
+
+            return new Promise((resolve, reject) => {
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function addItemsToCollection(itemIds, collectionId) {
+            if (!db) await initDB();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            const promises = itemIds.map(id => {
+                return new Promise((resolve) => {
+                    const getReq = store.get(id);
+                    getReq.onsuccess = () => {
+                        const item = getReq.result;
+                        if (item) {
+                            item.collectionId = collectionId;
+                            store.put(item).onsuccess = () => resolve();
+                        } else resolve();
+                    };
+                });
+            });
+            await Promise.all(promises);
+            await renderHistory();
+        }
+
+        function updateCollectionSelectors() {
+            const filterOptions = `
+                <option value="all">全部展示</option>
+                <option value="uncollected">未分类</option>
+                ${collections.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+            `;
+            collectionFilter.innerHTML = filterOptions;
+            collectionFilter.value = currentFilter;
+
+            const modalOptions = `
+                <option value="">-- 请选择 --</option>
+                ${collections.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+            `;
+            existingCollectionSelect.innerHTML = modalOptions;
+            
+            // Show/hide delete collection button
+            const isCustomCollection = currentFilter !== 'all' && currentFilter !== 'uncollected';
+            deleteCollectionBtn.style.display = isCustomCollection ? 'flex' : 'none';
         }
 
         async function loadHistory() {
@@ -1383,30 +1626,50 @@
 
         async function renderHistory() {
             await loadHistory();
+            await loadCollections();
+            
+            let filteredHistory = history;
+            if (currentFilter === 'uncollected') {
+                filteredHistory = history.filter(item => !item.collectionId);
+            } else if (currentFilter !== 'all') {
+                const cid = parseInt(currentFilter);
+                filteredHistory = history.filter(item => item.collectionId === cid);
+            }
+
             if (history.length === 0) {
                 historySection.style.display = 'none';
                 return;
             }
             historySection.style.display = 'block';
-            historyGrid.innerHTML = history.map((item, idx) => {
+            
+            historyGrid.innerHTML = filteredHistory.map((item, idx) => {
                 const isPending = item.status === 'pending';
                 const isError = item.status === 'error';
+                const isSelected = selectedItems.has(item.id);
+                const collection = item.collectionId ? collections.find(c => c.id === item.collectionId) : null;
+                
                 const imgContent = isPending 
                     ? `<div class="history-pending"><div class="spinner" style="width:30px;height:30px;border-width:2px;"></div><div style="font-size:11px;color:#888;margin-top:5px;">生成中...</div></div>`
                     : isError
                     ? `<div class="history-error"><div style="font-size:11px;color:#f00;">失败</div><div style="font-size:10px;color:#888;">${item.errorMsg || ''}</div></div>`
                     : `<img src="${item.url}" alt="历史图片">`;
                 const hideButtons = isPending;
+                
                 return `
-                <div class="history-item ${isPending ? 'pending' : ''} ${isError ? 'error' : ''}" ${!hideButtons && !isError ? `onclick="useHistoryItem(${idx}, event)"` : ''}>
+                <div class="history-item ${isPending ? 'pending' : ''} ${isError ? 'error' : ''} ${isSelected ? 'selected' : ''} ${isSelecting ? 'selecting' : ''}" 
+                     id="historyItem_${item.id}"
+                     onclick="handleHistoryItemClick(${item.id}, ${idx}, event)">
                     ${imgContent}
-                    <button class="history-delete-btn" onclick="deleteHistoryItemById(${item.id}, event)">×</button>
-                    ${isError ? `
-                    <button class="history-retry-btn" onclick="retryHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
-                    ` : !hideButtons ? `
-                    <button class="history-zoom-btn" onclick="zoomHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
-                    <button class="history-download-btn" onclick="downloadHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-                    <button class="history-reuse-btn" onclick="reuseHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
+                    ${collection ? `<div class="collection-badge">${collection.name}</div>` : ''}
+                    ${!isSelecting ? `
+                        <button class="history-delete-btn" onclick="deleteHistoryItemById(${item.id}, event)">×</button>
+                        ${isError ? `
+                        <button class="history-retry-btn" onclick="retryHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
+                        ` : !hideButtons ? `
+                        <button class="history-zoom-btn" onclick="zoomHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+                        <button class="history-download-btn" onclick="downloadHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+                        <button class="history-reuse-btn" onclick="reuseHistoryItem(${idx}, event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
+                        ` : ''}
                     ` : ''}
                     <div class="history-item-info">
                         <div class="history-item-time">${item.time}</div>
@@ -1416,8 +1679,101 @@
             `}).join('');
         }
 
+        window.handleHistoryItemClick = function(id, idx, e) {
+            if (isSelecting) {
+                const itemEl = document.getElementById(`historyItem_${id}`);
+                if (selectedItems.has(id)) {
+                    selectedItems.delete(id);
+                    if (itemEl) itemEl.classList.remove('selected');
+                } else {
+                    selectedItems.add(id);
+                    if (itemEl) itemEl.classList.add('selected');
+                }
+                updateSelectionUI();
+                return;
+            }
+            useHistoryItem(idx, e);
+        };
+
+        function updateSelectionUI() {
+            if (selectedItems.size > 0) {
+                selectionToolbar.classList.add('show');
+                selectionCount.textContent = `已选中 ${selectedItems.size} 项`;
+            } else {
+                selectionToolbar.classList.remove('show');
+            }
+        }
+
+        historySelectBtn.addEventListener('click', () => {
+            isSelecting = !isSelecting;
+            historySelectBtn.classList.toggle('active', isSelecting);
+            if (!isSelecting) {
+                selectedItems.clear();
+                updateSelectionUI();
+            }
+            renderHistory();
+        });
+
+        cancelSelectBtn.addEventListener('click', () => {
+            isSelecting = false;
+            historySelectBtn.classList.remove('active');
+            selectedItems.clear();
+            updateSelectionUI();
+            renderHistory();
+        });
+
+        collectionFilter.addEventListener('change', () => {
+            currentFilter = collectionFilter.value;
+            renderHistory();
+        });
+
+        addToCollectionBtn.addEventListener('click', () => {
+            collectionModal.classList.add('show');
+        });
+
+        collectionModalClose.addEventListener('click', () => collectionModal.classList.remove('show'));
+        collectionCancelBtn.addEventListener('click', () => collectionModal.classList.remove('show'));
+
+        collectionSaveBtn.addEventListener('click', async () => {
+            let collectionId = existingCollectionSelect.value;
+            const newName = newCollectionName.value.trim();
+            
+            if (newName) {
+                collectionId = await createCollection(newName);
+            } else if (!collectionId) {
+                showToast('请选择合集或输入新名称');
+                return;
+            }
+
+            await addItemsToCollection(Array.from(selectedItems), parseInt(collectionId));
+            showToast('已加入合集');
+            
+            // Reset selection
+            isSelecting = false;
+            historySelectBtn.classList.remove('active');
+            selectedItems.clear();
+            updateSelectionUI();
+            collectionModal.classList.remove('show');
+            newCollectionName.value = '';
+            renderHistory();
+        });
+
+        deleteCollectionBtn.addEventListener('click', async () => {
+            if (currentFilter === 'all' || currentFilter === 'uncollected') return;
+            const collection = collections.find(c => c.id === parseInt(currentFilter));
+            if (!collection) return;
+
+            const confirmed = await showToast(`确定要删除合集 "${collection.name}" 吗？\n合集内的图片将保留并变回未分类。`, { confirm: true });
+            if (confirmed) {
+                await deleteCollection(collection.id);
+                currentFilter = 'all';
+                await renderHistory();
+                showToast('合集已删除');
+            }
+        });
+
         window.useHistoryItem = function(idx, e) {
-            if (e.target.classList.contains('history-zoom-btn')) return;
+            if (e.target.closest('button')) return; // Ignore clicks on zoom/download/etc buttons
             const item = history[idx];
             if (!item.url) return;
             if (!referenceImages.includes(item.url)) {
