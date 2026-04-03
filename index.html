@@ -3503,7 +3503,8 @@
 
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 120000);
+                    const timeout = sizeSelect.value === '4K' ? 300000 : 120000;
+                    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
                     const response = await fetch(apiUrl, {
                         method: 'POST',
