@@ -1,4 +1,4 @@
-# Nano-banana 图片生成器 V7.2
+# Nano-banana 图片生成器
 
 一个基于 AI 的在线图片生成工具，支持参考图、多模型选择和批量生成。
 
@@ -7,7 +7,7 @@
 
 ## 界面展示
 
-![界面](https://lxj-picgo.oss-cn-chengdu.aliyuncs.com/20260401212411430.png)
+![](https://github.com/lxj5820/nano-banana/blob/main/%E7%95%8C%E9%9D%A2.png?raw=true)
 
 ## 功能特性
 
