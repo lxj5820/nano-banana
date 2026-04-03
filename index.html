@@ -2214,7 +2214,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V7.5</span></div>
+        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V7.6</span></div>
         <div class="navbar-links">
             <button class="nav-btn" id="galleryBtn">图库</button>
             <button class="nav-btn" id="guideBtn">指南</button>
@@ -2361,6 +2361,10 @@
             <div class="form-group">
                 <label>API Key <a href="https://newapi.asia/register?channel=c_ripg6oed" target="_blank" rel="noopener noreferrer" class="api-link">[获取API]</a></label>
                 <input type="password" id="modalApiKey" placeholder="输入 API Key">
+            </div>
+            <div class="form-group" style="background:#2a2a2a;padding:12px;border-radius:8px;margin-top:8px;">
+                <div style="color:#FFE135;font-size:12px;font-weight:600;margin-bottom:4px;">💡 温馨提示</div>
+                <div style="color:#888;font-size:12px;line-height:1.5;">您需要可能需要充值后才能使用，每日签到有奖励哦！</div>
             </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" id="modalCancelBtn">取消</button>
@@ -3521,7 +3525,7 @@
                         const status = response.status;
                         let errorMsg;
                         if (status === 401 || status === 403) {
-                            errorMsg = '余额不足请检查您的账户';
+                            errorMsg = '余额不足请充值后重试';
                         } else if (status === 429) {
                             errorMsg = '请求过于频繁，请稍后再试';
                         } else if (status === 400) {
