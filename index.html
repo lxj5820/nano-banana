@@ -3521,7 +3521,7 @@
                         const status = response.status;
                         let errorMsg;
                         if (status === 401 || status === 403) {
-                            errorMsg = 'API Key 无效或已过期';
+                            errorMsg = '余额不足请检查您的账户';
                         } else if (status === 429) {
                             errorMsg = '请求过于频繁，请稍后再试';
                         } else if (status === 400) {
