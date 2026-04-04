@@ -1890,28 +1890,6 @@
             outline: none;
             border-color: #FFE135;
         }
-        .token-usage-info {
-            background: #2a2a2a;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 8px;
-        }
-        .token-usage-title {
-            color: #FFE135;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .token-usage-row {
-            display: flex;
-            justify-content: space-between;
-            color: #888;
-            font-size: 12px;
-            margin-bottom: 4px;
-        }
-        .token-usage-row span:last-child {
-            color: #fff;
-        }
         .modal-actions {
             margin-top: 20px;
             display: flex;
@@ -2227,26 +2205,6 @@
             <div class="form-group">
                 <label>API Key <a href="https://newapi.asia/register?channel=c_ripg6oed" target="_blank" rel="noopener noreferrer" class="api-link">[获取API]</a></label>
                 <input type="password" id="modalApiKey" placeholder="输入 API Key">
-            </div>
-            <div class="token-usage-info" id="tokenUsageInfo">
-                <div class="token-usage-title">令牌使用情况</div>
-                <div class="token-usage-row">
-                    <span>总额度:</span>
-                    <span id="tokenTotal">--</span>
-                </div>
-                <div class="token-usage-row">
-                    <span>已使用:</span>
-                    <span id="tokenUsed">--</span>
-                </div>
-                <div class="token-usage-row">
-                    <span>剩余:</span>
-                    <span id="tokenAvailable">--</span>
-                </div>
-                <div class="token-usage-row">
-                    <span>过期时间:</span>
-                    <span id="tokenExpires">--</span>
-                </div>
-                <button class="btn btn-secondary" id="refreshTokenBtn" style="margin-top:8px;width:100%;">刷新</button>
             </div>
             <div class="form-group" style="background:#2a2a2a;padding:12px;border-radius:8px;margin-top:8px;">
                 <div style="color:#FFE135;font-size:12px;font-weight:600;margin-bottom:4px;">💡 温馨提示</div>
@@ -3756,44 +3714,6 @@
             settingsModal.classList.remove('show');
             showToast('配置已保存');
         });
-
-        const refreshTokenBtn = document.getElementById('refreshTokenBtn');
-        async function fetchTokenUsage() {
-            const apiKey = localStorage.getItem('nanoApiKey');
-            if (!apiKey) {
-                document.getElementById('tokenTotal').textContent = '--';
-                document.getElementById('tokenUsed').textContent = '--';
-                document.getElementById('tokenAvailable').textContent = '--';
-                document.getElementById('tokenExpires').textContent = '--';
-                return;
-            }
-            try {
-                const response = await fetch('https://newapi.asia/api/usage/token/', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + apiKey
-                    }
-                });
-                const data = await response.json();
-                if (data.code && data.data) {
-                    const d = data.data;
-                    document.getElementById('tokenTotal').textContent = d.total_granted ? (d.total_granted / 1000000).toFixed(2) + 'M' : '--';
-                    document.getElementById('tokenUsed').textContent = d.total_used ? (d.total_used / 1000000).toFixed(2) + 'M' : '--';
-                    document.getElementById('tokenAvailable').textContent = d.total_available ? (d.total_available / 1000000).toFixed(2) + 'M' : '--';
-                    document.getElementById('tokenExpires').textContent = d.expires_at ? new Date(d.expires_at * 1000).toLocaleDateString('zh-CN') : '永不过期';
-                } else {
-                    throw new Error(data.message || '获取失败');
-                }
-            } catch (e) {
-                console.error('获取令牌使用情况失败:', e);
-                document.getElementById('tokenTotal').textContent = '获取失败';
-                document.getElementById('tokenUsed').textContent = '--';
-                document.getElementById('tokenAvailable').textContent = '--';
-                document.getElementById('tokenExpires').textContent = '--';
-            }
-        }
-
-        refreshTokenBtn.addEventListener('click', fetchTokenUsage);
 
         document.getElementById('historyClearBtn').addEventListener('click', async () => {
             const confirmed = await showToast('确定要清空所有历史记录吗？', { confirm: true });
