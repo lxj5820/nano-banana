@@ -2214,7 +2214,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V7.6</span></div>
+        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V7.7</span></div>
         <div class="navbar-links">
             <button class="nav-btn" id="galleryBtn">图库</button>
             <button class="nav-btn" id="guideBtn">指南</button>
@@ -3524,12 +3524,22 @@
                         const err = await response.json().catch(() => ({}));
                         const status = response.status;
                         let errorMsg;
-                        if (status === 401 || status === 403) {
-                            errorMsg = '余额不足请充值后重试';
+                        if (status === 400) {
+                            errorMsg = err.error?.message || '请求格式错误或不能被服务器理解，请检查请求参数';
+                        } else if (status === 401) {
+                            errorMsg = 'API密钥验证未通过，请检查密钥是否正确或已过期（也可能是余额不足）';
+                        } else if (status === 403) {
+                            errorMsg = '权限不足，请确认账户权限设置';
+                        } else if (status === 404) {
+                            errorMsg = '请求的资源未找到，请检查端点地址';
+                        } else if (status === 413) {
+                            errorMsg = '请求体太大，请减小请求体容量';
                         } else if (status === 429) {
-                            errorMsg = '请求过于频繁，请稍后再试';
-                        } else if (status === 400) {
-                            errorMsg = err.error?.message || '请求参数错误';
+                            errorMsg = '请求被拦截，请检查您的提示词稍后再试';
+                        } else if (status === 500) {
+                            errorMsg = '服务器内部错误，可能是OpenAI服务器的问题';
+                        } else if (status === 503) {
+                            errorMsg = '服务器暂时不可用，可能正在维护或服务器过载';
                         } else if (status >= 500) {
                             errorMsg = '服务器繁忙，请稍后再试';
                         } else {
