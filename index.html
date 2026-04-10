@@ -1,11 +1,47 @@
 <!DOCTYPE html>
+<!--
+=========================================================
+Nano-banana 生图工具 - AI 图片生成应用
+=========================================================
+功能概述：
+- 基于 Gemini API 的 AI 图片生成工具
+- 支持文生图、图生图模式
+- 历史记录本地存储（IndexedDB）
+- 合集管理功能
+- 批量下载图片
+- 支持多种图片比例和画质
+
+主要技术栈：
+- 纯原生 HTML/CSS/JavaScript
+- IndexedDB 本地数据库
+- Gemini API（newapi.asia）
+- JSZip 库（用于批量下载）
+=========================================================
+-->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>nanobanana生图工具</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍌</text></svg>">
+    
+    <!-- =========================================================
+         CSS 样式表
+         包含以下主要部分：
+         1. 基础重置样式 (9-45行)
+         2. 导航栏样式 (46-56行, 133-167行)
+         3. 主内容区域样式 (57-79行, 176-201行)
+         4. 生成槽位样式 (81-131行, 203-281行)
+         5. 历史记录侧边栏样式 (283-803行)
+         6. 工具栏样式 (803-891行, 1521-1711行)
+         7. 模态框样式 (1827-1921行)
+         8. Toast 提示样式 (1922-1978行)
+         9. 加载动画样式 (1712-1826行)
+    ========================================================= -->
     <style>
+        /* =====================================================
+           1. 基础重置样式
+           ===================================================== */
         * {
             margin: 0;
             padding: 0;
@@ -43,6 +79,9 @@
             margin: 0;
             overflow: hidden; /* 全局禁止滚动 */
         }
+        /* =====================================================
+           2. 导航栏样式
+           ===================================================== */
         .navbar {
             background: #1a1a1a;
             padding: 0 24px;
@@ -54,6 +93,8 @@
             position: relative;
             z-index: 1000;
         }
+        
+        /* 主应用容器 - 包含主内容和侧边栏 */
         .app-container {
             display: flex;
             height: calc(100vh - 60px);
@@ -61,6 +102,11 @@
             overflow: hidden;
         }
         
+        /* =====================================================
+           3. 主内容区域样式
+           - 图片展示区域
+           - 工具栏
+           ===================================================== */
         .main-content {
             flex: 1;
             padding: 10px 40px 20px;
@@ -78,6 +124,11 @@
             box-shadow: inset 0 0 80px rgba(0,0,0,0.6);
         }
 
+        /* =====================================================
+           4. 生成槽位样式
+           - 用于展示正在生成的图片
+           - 包含加载动画
+           ===================================================== */
         .gen-slots-container {
             display: grid;
             gap: 16px;
@@ -108,6 +159,7 @@
             background: #000;
         }
         
+        /* 生成槽位加载中的遮罩层 */
         .slot-loading-overlay {
             position: absolute;
             inset: 0;
@@ -120,6 +172,7 @@
             z-index: 10;
         }
         
+        /* 加载动画的 Logo 脉冲效果 */
         .pulse-logo {
             font-size: 36px;
             animation: pulse 2s infinite;
@@ -130,6 +183,9 @@
             100% { transform: scale(1); opacity: 0.6; }
         }
 
+        /* =====================================================
+           5. 导航栏样式（覆盖）
+           ===================================================== */
         .navbar {
             background: #1a1a1a;
             padding: 0 24px;
@@ -280,6 +336,15 @@
             background: #000;
         }
 
+        /* =====================================================
+           6. 历史记录侧边栏样式
+           - 侧边栏容器
+           - 侧边栏调整器
+           - 历史记录网格布局
+           - 历史记录项卡片
+           - 悬浮操作按钮
+           - 合集相关样式
+           ===================================================== */
         .history-sidebar {
             width: 380px;
             min-width: 280px;
@@ -2051,22 +2116,41 @@
             font-size: 0.9rem;
         }
     </style>
+    
+    <!-- 引入 JSZip 库用于批量下载图片 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
+    <!-- ===========================================================
+         HTML 结构部分
+         =========================================================== -->
+    
+    <!-- ===========================================================
+         1. 顶部导航栏
+         =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.0</span></div>
+        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.1</span></div>
         <div class="navbar-links">
+            <!-- 图库按钮 - 切换历史记录侧边栏 -->
             <button class="nav-btn" id="galleryBtn">图库</button>
+            <!-- 指南按钮 - 打开提示词指南弹窗 -->
             <button class="nav-btn" id="guideBtn">指南</button>
+            <!-- 设置按钮 - 打开API配置弹窗 -->
             <button class="nav-btn" id="settingsBtn">设置</button>
+            <!-- 控制台链接 - 跳转API控制台 -->
             <a class="nav-btn" href="https://newapi.asia/console" target="_blank" rel="noopener noreferrer">控制台</a>
         </div>
     </nav>
 
+    <!-- ===========================================================
+         2. 主应用容器
+         =========================================================== -->
     <div class="app-container">
+        <!-- 主内容区域 -->
         <main class="main-content">
+            <!-- 图片展示区域 -->
             <div class="display-area" id="displayArea">
+                <!-- 默认占位内容 -->
                 <div class="display-placeholder">
                     <div class="display-placeholder-icon">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
@@ -2075,15 +2159,23 @@
                     <p class="display-placeholder-sub">在下方输入提示词，灵感即刻呈现</p>
                 </div>
             </div>
+            
+            <!-- 底部工具栏 -->
             <div class="toolbar">
+                <!-- 参考图上传区域 -->
                 <div class="ref-images-upload empty" id="refImagesUpload">
                     <input type="file" id="refImagesInput" accept="image/*" multiple class="file-input">
                     <span class="upload-hint">点击或拖拽上传参考图（支持多张）</span>
                 </div>
+                
+                <!-- 提示词输入框 -->
                 <div class="toolbar-prompt">
                     <textarea id="prompt" placeholder="输入提示词，描述你想要生成的图片..."></textarea>
                 </div>
+                
+                <!-- 工具栏控制区域 -->
                 <div class="toolbar-controls">
+                    <!-- 图片比例选择 -->
                     <div class="toolbar-section">
                         <label>比例</label>
                         <select id="ratioSelect" title="选择图片比例">
@@ -2099,6 +2191,8 @@
                             <option value="21:9">21:9</option>
                         </select>
                     </div>
+                    
+                    <!-- 图片画质选择 -->
                     <div class="toolbar-section" id="sizeSection">
                         <label>画质</label>
                         <select id="sizeSelect" title="选择图片画质">
@@ -2107,6 +2201,8 @@
                             <option value="4K">4K</option>
                         </select>
                     </div>
+                    
+                    <!-- AI模型选择 -->
                     <div class="toolbar-section">
                         <label>模型</label>
                         <select id="modelSelect" title="选择AI模型">
@@ -2115,6 +2211,8 @@
                             <option value="nano-banana-pro">nano-banana-pro</option>
                         </select>
                     </div>
+                    
+                    <!-- 生成数量选择 -->
                     <div class="toolbar-section">
                         <label>数量</label>
                         <select id="numSelect" title="选择生成数量">
@@ -2124,44 +2222,60 @@
                             <option value="4">4张</option>
                         </select>
                     </div>
+                    
+                    <!-- 生成按钮 -->
                     <button class="btn-generate" id="generateBtn">生成</button>
                 </div>
             </div>
         </main>
 
+        <!-- ===========================================================
+             3. 历史记录侧边栏
+             =========================================================== -->
         <aside class="history-sidebar hidden" id="historySidebar">
+            <!-- 侧边栏宽度调整器 -->
             <div class="sidebar-resizer" id="sidebarResizer"></div>
+            
+            <!-- 侧边栏头部 -->
             <div class="history-header">
-                <!-- ... existing header content ... -->
                 <div class="history-title-top">
                     <div class="gallery-label">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
                         我的图库
                     </div>
                     <div class="header-actions-group">
+                        <!-- 管理按钮 - 进入多选模式 -->
                         <button class="history-select-btn" id="historySelectBtn">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
                             管理
                         </button>
+                        <!-- 批量下载按钮 -->
                         <button class="icon-btn-small" id="downloadAllBtn" title="批量下载">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         </button>
+                        <!-- 清空图库按钮 -->
                         <button class="icon-btn-small danger" id="historyClearBtn" title="清空图库">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </div>
                 </div>
+                <!-- 合集筛选下拉框 -->
                 <select class="collection-select" id="collectionFilter" style="display:none;">
                     <option value="all">全部作品</option>
                     <option value="uncollected">未分类</option>
                 </select>
             </div>
+            
+            <!-- 合集标签横向滚动区域 -->
             <div class="collection-tabs-wrapper" style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);">
                 <div class="collection-tabs" id="collectionTabs" style="flex:1;margin:0;padding:0;border:none;"></div>
+                <!-- 删除当前合集按钮 -->
                 <button class="icon-btn-small danger" id="deleteCollectionBtn" title="删除当前合集" style="display:none;flex-shrink:0;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </div>
+            
+            <!-- 多选操作工具栏 -->
             <div class="selection-toolbar" id="selectionToolbar">
                 <span class="selection-count" id="selectionCount">已选中 0 项</span>
                 <button class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="selectAllBtn">全选</button>
@@ -2169,11 +2283,19 @@
                 <button class="btn btn-primary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="addToCollectionBtn">加入合集</button>
                 <button class="btn btn-danger btn-sm" style="padding: 6px 12px; font-size: 12px;" id="deleteSelectedBtn">删除</button>
             </div>
+            
+            <!-- 历史记录网格容器 -->
             <div class="history-section" id="historySection">
                 <div class="history-grid" id="historyGrid"></div>
             </div>
         </aside>
+    </div>
 
+    <!-- ===========================================================
+         4. 模态弹窗
+         =========================================================== -->
+    
+    <!-- 合集管理弹窗 -->
     <div class="modal-overlay" id="collectionModal">
         <div class="modal">
             <div class="modal-title">
@@ -2196,6 +2318,7 @@
         </div>
     </div>
 
+    <!-- API设置弹窗 -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal">
             <div class="modal-title">
@@ -2217,6 +2340,7 @@
         </div>
     </div>
 
+    <!-- 提示词指南弹窗 -->
     <div class="modal-overlay guide-modal" id="guideModal">
         <div class="modal">
             <div class="modal-title">
@@ -2289,6 +2413,9 @@
         </div>
     </div>
 
+    <!-- ===========================================================
+         5. Toast 提示组件
+         =========================================================== -->
     <div class="toast" id="toast">
         <div class="toast-dialog">
             <div class="toast-message" id="toastMessage"></div>
@@ -2296,7 +2423,24 @@
         </div>
     </div>
 
+    <!-- ===========================================================
+         JavaScript 脚本部分
+         包含以下主要功能模块：
+         1. DOM 元素初始化
+         2. IndexedDB 数据库操作
+         3. 历史记录管理
+         4. 合集管理
+         5. Toast 提示系统
+         6. UI 渲染函数
+         7. 侧边栏交互
+         8. 图片生成逻辑
+         9. 事件监听器
+         =========================================================== -->
     <script>
+        /* =====================================================
+           1. DOM 元素引用
+           获取页面中所有需要操作的 DOM 元素
+           ===================================================== */
         const displayArea = document.getElementById('displayArea');
         const refImageInput = document.getElementById('refImageInput');
         const promptInput = document.getElementById('prompt');
@@ -2337,22 +2481,36 @@
         const collectionModalClose = document.getElementById('collectionModalClose');
         const deleteCollectionBtn = document.getElementById('deleteCollectionBtn');
 
-        let selectedRatio = '1:1';
-        let runningTasks = 0;
-        let taskQueue = 0;
-        let referenceImages = [];
-        let history = [];
-        let collections = [];
-        let isSelecting = false;
-        let selectedItems = new Set();
-        let currentFilter = 'all';
+        /* =====================================================
+           2. 全局状态变量
+           ===================================================== */
+        let selectedRatio = '1:1';              // 当前选中的图片比例
+        let runningTasks = 0;                    // 当前正在运行的任务数
+        let taskQueue = 0;                      // 排队的任务数
+        let referenceImages = [];                // 参考图列表
+        let history = [];                        // 历史记录列表
+        let collections = [];                    // 合集列表
+        let isSelecting = false;                // 是否处于多选模式
+        let selectedItems = new Set();           // 已选中的项目 ID 集合
+        let currentFilter = 'all';               // 当前筛选条件
 
+        /* =====================================================
+           3. IndexedDB 数据库配置
+           用于本地存储历史记录和合集信息
+           ===================================================== */
         const DB_NAME = 'NanoBananaDB';
         const DB_VERSION = 3;
         const STORE_NAME = 'images';
         const COLLECTION_STORE = 'collections';
         let db = null;
 
+        /* =====================================================
+           4. IndexedDB 数据库初始化
+           ===================================================== */
+        /**
+         * 初始化 IndexedDB 数据库
+         * @returns {Promise<IDBDatabase>} 数据库实例
+         */
         function initDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -2363,13 +2521,16 @@
                 };
                 request.onupgradeneeded = (e) => {
                     const database = e.target.result;
+                    // 创建图片存储对象
                     if (!database.objectStoreNames.contains(STORE_NAME)) {
                         database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
                     }
+                    // 创建合集存储对象
                     if (!database.objectStoreNames.contains(COLLECTION_STORE)) {
                         database.createObjectStore(COLLECTION_STORE, { keyPath: 'id', autoIncrement: true });
                     }
                     
+                    // 为图片存储创建合集索引，便于按合集查询
                     const store = e.currentTarget.transaction.objectStore(STORE_NAME);
                     if (!store.indexNames.contains('collectionId')) {
                         store.createIndex('collectionId', 'collectionId', { unique: false });
@@ -2378,6 +2539,12 @@
             });
         }
 
+        /* =====================================================
+           5. 合集管理函数
+           ===================================================== */
+        /**
+         * 从数据库加载所有合集
+         */
         async function loadCollections() {
             if (!db) await initDB();
             return new Promise((resolve, reject) => {
@@ -2393,6 +2560,11 @@
             });
         }
 
+        /**
+         * 创建新合集
+         * @param {string} name - 合集名称
+         * @returns {Promise<number>} 新合集的 ID
+         */
         async function createCollection(name) {
             if (!db) await initDB();
             return new Promise((resolve, reject) => {
@@ -2404,16 +2576,20 @@
             });
         }
 
+        /**
+         * 删除合集（不会删除合集中的图片，只是取消分类）
+         * @param {number} id - 合集 ID
+         */
         async function deleteCollection(id) {
             if (!db) await initDB();
             const tx = db.transaction([COLLECTION_STORE, STORE_NAME], 'readwrite');
             const collectionStore = tx.objectStore(COLLECTION_STORE);
             const imageStore = tx.objectStore(STORE_NAME);
             
-            // 1. Delete collection
+            // 1. 删除合集本身
             collectionStore.delete(id);
             
-            // 2. Clear collectionId for images in this collection
+            // 2. 将该合集中的图片设为未分类
             const index = imageStore.index('collectionId');
             const request = index.getAll(id);
             request.onsuccess = () => {
@@ -2430,6 +2606,11 @@
             });
         }
 
+        /**
+         * 将多个历史项添加到指定合集
+         * @param {number[]} itemIds - 历史项 ID 数组
+         * @param {number} collectionId - 合集 ID
+         */
         async function addItemsToCollection(itemIds, collectionId) {
             if (!db) await initDB();
             const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -2450,6 +2631,9 @@
             await renderHistory();
         }
 
+        /**
+         * 更新合集选择器（下拉框和标签）的选项
+         */
         function updateCollectionSelectors() {
             const filterOptions = `
                 <option value="all">全部作品</option>
@@ -2492,6 +2676,13 @@
             updateCollectionSelectors(); // 更新标签高亮
         };
 
+        /* =====================================================
+           6. 历史记录管理函数
+           ===================================================== */
+        /**
+         * 从数据库加载所有历史记录
+         * @returns {Promise<Array>} 历史记录数组
+         */
         async function loadHistory() {
             if (!db) await initDB();
             return new Promise((resolve, reject) => {
@@ -2499,6 +2690,7 @@
                 const store = tx.objectStore(STORE_NAME);
                 const request = store.getAll();
                 request.onsuccess = () => {
+                    // 按 ID 降序排列，最新的在前面
                     history = request.result.sort((a, b) => (b.id || 0) - (a.id || 0));
                     console.log('加载历史记录:', history.length, '条');
                     history.forEach((item, i) => console.log(`  [${i}] id:${item.id}, prompt:${item.prompt?.substring(0, 20)}, refImages:${item.refImages?.length || 0}`));
@@ -2508,6 +2700,11 @@
             });
         }
 
+        /**
+         * 保存新记录到历史记录
+         * @param {Object} item - 要保存的记录
+         * @returns {Promise<number>} 新记录的 ID
+         */
         async function saveToHistory(item) {
             if (!db) await initDB();
             console.log('保存历史记录, refImages数量:', item.refImages?.length || 0);
@@ -2526,6 +2723,12 @@
             });
         }
 
+        /**
+         * 更新历史记录的某些字段
+         * @param {number} id - 记录 ID
+         * @param {Object} updates - 要更新的字段
+         * @returns {Promise<Object>} 更新后的记录
+         */
         async function updateHistoryItem(id, updates) {
             if (!db) await initDB();
             return new Promise((resolve, reject) => {
@@ -2547,6 +2750,9 @@
             });
         }
 
+        /**
+         * 清空所有历史记录
+         */
         async function clearAllHistory() {
             if (!db) await initDB();
             return new Promise((resolve, reject) => {
@@ -2558,6 +2764,10 @@
             });
         }
 
+        /**
+         * 删除单条历史记录
+         * @param {number} id - 记录 ID
+         */
         async function deleteHistoryItem(id) {
             if (!db) await initDB();
             if (id == null) {
@@ -2573,7 +2783,19 @@
             });
         }
 
+        /* =====================================================
+           7. Toast 提示系统
+           ===================================================== */
         let toastResolve = null;
+        
+        /**
+         * 显示 Toast 提示框
+         * @param {string} msg - 提示消息
+         * @param {Object} options - 配置选项
+         * @param {boolean} options.confirm - 是否显示确认/取消按钮
+         * @param {number} options.duration - 自动关闭时间（毫秒），0 表示不自动关闭
+         * @returns {Promise<boolean>} 用户点击确定返回 true，取消返回 false
+         */
         function showToast(msg, options = {}) {
             return new Promise((resolve) => {
                 const toastEl = document.getElementById('toast');
@@ -2624,9 +2846,16 @@
             }
         };
 
+        /* =====================================================
+           8. 历史记录渲染函数
+           ===================================================== */
         let lastRenderedCount = 0;
-        const RENDER_BATCH_SIZE = 40;
+        const RENDER_BATCH_SIZE = 40;  // 每批渲染的条目数
 
+        /**
+         * 渲染历史记录列表
+         * 支持分批渲染以提升性能
+         */
         async function renderHistory() {
             await loadHistory();
             await loadCollections();
@@ -3226,8 +3455,16 @@
             sizeSection.style.display = 'flex';
         }
 
+        /* =====================================================
+           9. 图片生成功能
+           ===================================================== */
+        
+        // 生成按钮点击事件
         generateBtn.addEventListener('click', generateImage);
 
+        /**
+         * 更新生成按钮的状态和文字
+         */
         function updateGenerateBtn() {
             if (runningTasks > 0) {
                 generateBtn.disabled = false;
@@ -3238,6 +3475,12 @@
             }
         }
 
+        /**
+         * 主生成函数 - 协调整个图片生成流程
+         * 1. 验证输入
+         * 2. 调用 Gemini API 生成图片
+         * 3. 保存结果到历史记录
+         */
         async function generateImage() {
             const prompt = promptInput.value.trim();
             if (!prompt) {
@@ -3282,7 +3525,6 @@
             
             taskQueue++;
             // ... (rest of the function)
-            updateGenerateBtn();
             
             const modelMap = {
                 'nano-banana-pro': 'gemini-3-pro-image-preview',
@@ -3325,6 +3567,10 @@
             const placeholderIds = placeholderResults.map(r => r.id);
             await renderHistory();
 
+            /**
+             * 生成单张图片的内部函数
+             * @param {number} index - 图片索引
+             */
             async function generateSingleImage(index) {
                 const slot = document.getElementById(`genSlot${taskId}_${index}`);
                 
@@ -3391,8 +3637,14 @@
                 }
 
                 try {
+                    // AbortController 用于中止正在进行的请求
                     const controller = new AbortController();
-                    const timeout = sizeSelect.value === '4K' ? 300000 : 120000;
+                    
+                    // 根据画质设置超时时间：4K画质10分钟，1K/2K画质5分钟
+                    // 单位为毫秒：600000ms = 10分钟，300000ms = 5分钟
+                    const timeout = sizeSelect.value === '4K' ? 600000 : 300000;
+                    
+                    // 设置定时器，超时后自动中止请求
                     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
                     const response = await fetch(apiUrl, {
@@ -3504,7 +3756,9 @@
                     taskErrorCount++;
                     let errorMessage = error.message;
                     if (error.name === 'AbortError') {
-                        errorMessage = '请求超时，请检查网络连接';
+                        // 超时提示：显示当前画质对应的超时时间，更加友好
+                        const timeoutMinutes = sizeSelect.value === '4K' ? '10分钟' : '5分钟';
+                        errorMessage = `生成超时（${timeoutMinutes}）`;
                     } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                         errorMessage = '网络连接失败，请检查网络';
                     }
@@ -3540,9 +3794,16 @@
             }
 
             runningTasks++;
+            updateGenerateBtn();
             const promises = Array.from({ length: numImages }, (_, i) => generateSingleImage(i));
         }
         
+        /**
+         * 更新历史记录中的图片URL和分辨率
+         * @param {number} id - 历史记录 ID
+         * @param {string} url - 图片 URL
+         * @param {string} resolution - 分辨率字符串
+         */
         async function updateHistoryItemImage(id, url, resolution) {
             try {
                 await updateHistoryItem(id, { url, resolution, status: 'completed' });
@@ -3552,6 +3813,11 @@
             }
         }
         
+        /**
+         * 更新历史记录中的错误状态
+         * @param {number} id - 历史记录 ID
+         * @param {string} errorMsg - 错误信息
+         */
         async function updateHistoryItemError(id, errorMsg) {
             try {
                 await updateHistoryItem(id, { status: 'error', errorMsg });
@@ -3561,6 +3827,13 @@
             }
         }
 
+        /* =====================================================
+           10. 图片重叠滑块功能
+           ===================================================== */
+        /**
+         * 初始化图片重叠对比滑块
+         * 支持鼠标拖拽和触摸滑动
+         */
         function initOverlapSlider() {
             const wrapper = document.getElementById('overlapWrapper');
             const slider = document.getElementById('overlapSlider');
@@ -3612,6 +3885,10 @@
             updateSlider(wrapper.getBoundingClientRect().left + wrapper.offsetWidth / 2);
         }
 
+        /**
+         * 加载图片并显示分辨率
+         * @param {string} url - 图片 URL
+         */
         function loadResolution(url) {
             const img = new Image();
             img.onload = () => {
@@ -3625,6 +3902,13 @@
             img.src = url;
         }
 
+        /* =====================================================
+           11. 批量下载功能
+           ===================================================== */
+        /**
+         * 批量下载所有历史图片
+         * 使用 JSZip 打包成 ZIP 文件
+         */
         downloadAllBtn.addEventListener('click', async () => {
             if (history.length === 0) {
                 showToast('暂无历史记录');
@@ -3669,52 +3953,65 @@
             }
         });
 
+        /* =====================================================
+           12. 事件监听器绑定
+           ===================================================== */
+        
+        // 指南按钮 - 显示提示词指南弹窗
         guideBtn.addEventListener('click', () => {
             guideModal.classList.add('show');
         });
 
+        // 图库按钮 - 切换历史记录侧边栏显示/隐藏
         const galleryBtn = document.getElementById('galleryBtn');
-
         if (galleryBtn) {
             galleryBtn.addEventListener('click', () => {
                 sidebar.classList.toggle('hidden');
             });
         }
 
+        // 指南弹窗关闭按钮
         guideClose.addEventListener('click', () => {
             guideModal.classList.remove('show');
         });
 
+        // 点击指南弹窗背景关闭
         guideModal.addEventListener('click', e => {
             if (e.target === guideModal) {
                 guideModal.classList.remove('show');
             }
         });
 
+        // 设置按钮 - 显示设置弹窗
         settingsBtn.addEventListener('click', () => {
             settingsModal.classList.add('show');
         });
 
+        // 设置弹窗关闭按钮
         modalClose.addEventListener('click', () => {
             settingsModal.classList.remove('show');
         });
 
+        // 设置弹窗取消按钮
         modalCancelBtn.addEventListener('click', () => {
             settingsModal.classList.remove('show');
         });
 
+        // 点击设置弹窗背景关闭
         settingsModal.addEventListener('click', e => {
             if (e.target === settingsModal) {
                 settingsModal.classList.remove('show');
             }
         });
 
+        // 保存设置
         modalSaveBtn.addEventListener('click', () => {
             localStorage.setItem('nanoApiKey', modalApiKey.value);
             settingsModal.classList.remove('show');
             showToast('配置已保存');
         });
 
+        // 清空历史记录按钮
         document.getElementById('historyClearBtn').addEventListener('click', async () => {
             const confirmed = await showToast('确定要清空所有历史记录吗？', { confirm: true });
             if (confirmed) {
@@ -3725,6 +4022,10 @@
             }
         });
 
+        /* =====================================================
+           13. 应用初始化
+           ===================================================== */
+        // 初始化数据库并渲染历史记录
         initDB().then(() => renderHistory());
     </script>
 </body>
