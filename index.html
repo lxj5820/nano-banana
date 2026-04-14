@@ -1808,6 +1808,8 @@ Nano-banana 生图工具 - AI 图片生成应用
             grid-template-columns: 1fr;
             align-content: start;
             justify-items: stretch;
+            position: relative;
+            z-index: 2;
         }
         .gen-slot {
             min-height: 250px;
@@ -2129,7 +2131,7 @@ Nano-banana 生图工具 - AI 图片生成应用
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.1</span></div>
+        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.3</span></div>
         <div class="navbar-links">
             <!-- 图库按钮 - 切换历史记录侧边栏 -->
             <button class="nav-btn" id="galleryBtn">图库</button>
@@ -2179,6 +2181,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                     <div class="toolbar-section">
                         <label>比例</label>
                         <select id="ratioSelect" title="选择图片比例">
+                            <option value="auto">自动</option>
                             <option value="1:1">1:1</option>
                             <option value="4:3">4:3</option>
                             <option value="16:9">16:9</option>
@@ -2484,7 +2487,7 @@ Nano-banana 生图工具 - AI 图片生成应用
         /* =====================================================
            2. 全局状态变量
            ===================================================== */
-        let selectedRatio = '1:1';              // 当前选中的图片比例
+        let selectedRatio = 'auto';             // 当前选中的图片比例
         let runningTasks = 0;                    // 当前正在运行的任务数
         let taskQueue = 0;                      // 排队的任务数
         let referenceImages = [];                // 参考图列表
@@ -3337,7 +3340,7 @@ Nano-banana 生图工具 - AI 图片生成应用
             }
             await deleteHistoryItem(item.id);
             promptInput.value = item.prompt || '';
-            selectedRatio = item.ratio || '1:1';
+            selectedRatio = item.ratio || 'auto';
             ratioSelect.value = selectedRatio;
             referenceImages = [];
             (item.refImages || []).forEach(img => {
@@ -3464,11 +3467,19 @@ Nano-banana 生图工具 - AI 图片生成应用
 
         /**
          * 更新生成按钮的状态和文字
+         * @param {number} completedCount - 已完成图片数
+         * @param {number} totalCount - 总图片数
          */
-        function updateGenerateBtn() {
+        function updateGenerateBtn(completedCount = 0, totalCount = 0) {
             if (runningTasks > 0) {
                 generateBtn.disabled = false;
-                generateBtn.textContent = `生成中(${runningTasks + taskQueue})`;
+                if (totalCount > 0 && completedCount > 0) {
+                    generateBtn.textContent = `生成中(${completedCount}/${totalCount})`;
+                } else if (taskQueue > 0) {
+                    generateBtn.textContent = `生成中(${taskQueue})`;
+                } else {
+                    generateBtn.textContent = '生成中';
+                }
             } else {
                 generateBtn.disabled = false;
                 generateBtn.textContent = '生成';
@@ -3618,7 +3629,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                         generationConfig: {
                             responseModalities: ["TEXT", "IMAGE"],
                             imageConfig: {
-                                aspectRatio: selectedRatio,
+                                aspectRatio: selectedRatio === 'auto' ? '1:1' : selectedRatio,
                                 imageSize: sizeSelect.value
                             }
                         }
@@ -3629,7 +3640,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                         generationConfig: {
                             responseModalities: ["TEXT", "IMAGE"],
                             imageConfig: {
-                                aspectRatio: selectedRatio,
+                                aspectRatio: selectedRatio === 'auto' ? '1:1' : selectedRatio,
                                 imageSize: sizeSelect.value
                             }
                         }
@@ -3771,17 +3782,20 @@ Nano-banana 生图工具 - AI 图片生成应用
                     }
                 } finally {
                     taskCompleted++;
+                    // 每次完成都更新按钮状态
+                    updateGenerateBtn(taskCompleted, numImages);
+
                     if (taskCompleted === numImages) {
                         runningTasks--;
                         taskQueue--;
                         updateGenerateBtn();
-                        
+
                         if (runningTasks === 0) {
                             promptInput.value = '';
                             referenceImages = [];
                             updateRefImagesDisplay();
                         }
-                        
+
                         if (taskErrorCount > 0 && taskSuccessCount > 0) {
                             showToast(`任务完成：${taskSuccessCount}张成功，${taskErrorCount}张失败`);
                         } else if (taskErrorCount > 0) {
