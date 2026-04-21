@@ -22,8 +22,8 @@ Nano-banana 生图工具 - AI 图片生成应用
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nanobanana生图工具</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍌</text></svg>">
+    <title>词元AI生图工坊</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪙</text></svg>">
     
     <!-- =========================================================
          CSS 样式表
@@ -39,9 +39,10 @@ Nano-banana 生图工具 - AI 图片生成应用
          9. 加载动画样式 (1712-1826行)
     ========================================================= -->
     <style>
-        /* =====================================================
-           1. 基础重置样式
-           ===================================================== */
+/* =====================================================
+            1. 基础重置样式
+            包含 CSS 重置、滚动条、链接样式
+            ===================================================== */
         * {
             margin: 0;
             padding: 0;
@@ -79,9 +80,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             margin: 0;
             overflow: hidden; /* 全局禁止滚动 */
         }
-        /* =====================================================
-           2. 导航栏样式
-           ===================================================== */
+/* =====================================================
+            6. 模态框样式
+            包含设置弹窗、指南弹窗、合集弹窗
+            ===================================================== */
         .navbar {
             background: #1a1a1a;
             padding: 0 24px;
@@ -123,11 +125,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             height: calc(100vh - 60px);
         }
 
-        /* =====================================================
-           4. 生成槽位样式
-           - 用于展示正在生成的图片
-           - 包含加载动画
-           ===================================================== */
+/* =====================================================
+            4. 自定义下拉选择器样式
+            包含下拉触发器、下拉菜单、选项样式
+            ===================================================== */
         .gen-slots-container {
             display: grid;
             gap: 16px;
@@ -333,15 +334,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             background: #000;
         }
 
-        /* =====================================================
-           6. 历史记录侧边栏样式
-           - 侧边栏容器
-           - 侧边栏调整器
-           - 历史记录网格布局
-           - 历史记录项卡片
-           - 悬浮操作按钮
-           - 合集相关样式
-           ===================================================== */
+/* =====================================================
+            9. 侧边栏交互
+            处理侧边栏拖拽和多选模式
+            ===================================================== */
         .history-sidebar {
             width: 380px;
             min-width: 280px;
@@ -911,7 +907,132 @@ Nano-banana 生图工具 - AI 图片生成应用
             font-size: 12px;
             white-space: nowrap;
         }
-        
+
+        .custom-dropdown {
+            position: relative;
+            min-width: 140px;
+        }
+
+        .custom-dropdown-trigger {
+            width: 100%;
+            padding: 6px 28px 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #3f3f46;
+            background: #1a1a1a;
+            color: #e4e4e7;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .custom-dropdown-trigger:hover {
+            background: #27272a;
+            border-color: #52525b;
+        }
+
+        .custom-dropdown-trigger:focus {
+            outline: none;
+            border-color: #FFE135;
+            box-shadow: 0 0 0 2px rgba(255, 225, 53, 0.2);
+        }
+
+        .custom-dropdown-arrow {
+            width: 10px;
+            height: 10px;
+            transition: transform 0.2s;
+            color: #888;
+        }
+
+        .custom-dropdown.open .custom-dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .custom-dropdown-menu {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            margin-bottom: 8px;
+            width: 100%;
+            min-width: 140px;
+            background: #1a1a1a;
+            border: 1px solid #3f3f46;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            padding: 6px;
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(10px);
+            visibility: hidden;
+            transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+            overflow: visible;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .custom-dropdown-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-dropdown-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-dropdown-menu::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 20px;
+        }
+
+        .custom-dropdown-menu {
+            scrollbar-width: thin;
+            scrollbar-color: #4b5563 transparent;
+        }
+
+        .custom-dropdown.open .custom-dropdown-menu {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .custom-dropdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s, color 0.15s;
+            color: #d4d4d8;
+            white-space: nowrap;
+        }
+
+        .custom-dropdown-item:hover {
+            background: #27272a;
+            color: #ffffff;
+        }
+
+        .custom-dropdown-item.selected {
+            background: rgba(255, 225, 53, 0.15);
+            color: #FFE135;
+        }
+
+        .custom-dropdown-item .check-icon {
+            width: 12px;
+            height: 12px;
+            color: #FFE135;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .custom-dropdown-item.selected .check-icon {
+            opacity: 1;
+        }
+
         .toolbar select {
             padding: 6px 24px 6px 10px;
             border-radius: 8px;
@@ -2128,7 +2249,7 @@ Nano-banana 生图工具 - AI 图片生成应用
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🍌 Nano-banana <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.4</span></div>
+        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.5</span></div>
         <div class="navbar-links">
             <!-- 画布按钮 - 跳转AI画布 -->
             <a class="nav-btn" href="https://lxjcanvas.netlify.app/" target="_blank" rel="noopener noreferrer">画布</a>
@@ -2179,7 +2300,16 @@ Nano-banana 生图工具 - AI 图片生成应用
                     <!-- 图片比例选择 -->
                     <div class="toolbar-section">
                         <label>比例</label>
-                        <select id="ratioSelect" title="选择图片比例">
+                        <div class="custom-dropdown" id="ratioDropdown">
+                            <button class="custom-dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="selected-text">自动</span>
+                                <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 9l6 6 6-6"></path>
+                                </svg>
+                            </button>
+                            <div class="custom-dropdown-menu" role="listbox" id="ratioDropdownScroll"></div>
+                        </div>
+                        <select id="ratioSelect" title="选择图片比例" style="display:none;">
                             <option value="auto">自动</option>
                             <option value="1:1">1:1</option>
                             <option value="4:3">4:3</option>
@@ -2197,7 +2327,16 @@ Nano-banana 生图工具 - AI 图片生成应用
                     <!-- 图片画质选择 -->
                     <div class="toolbar-section" id="sizeSection">
                         <label>画质</label>
-                        <select id="sizeSelect" title="选择图片画质">
+                        <div class="custom-dropdown" id="sizeDropdown">
+                            <button class="custom-dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="selected-text">1K</span>
+                                <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 9l6 6 6-6"></path>
+                                </svg>
+                            </button>
+                            <div class="custom-dropdown-menu" role="listbox" id="sizeDropdownScroll"></div>
+                        </div>
+                        <select id="sizeSelect" title="选择图片画质" style="display:none;">
                             <option value="1K">1K</option>
                             <option value="2K">2K</option>
                             <option value="4K">4K</option>
@@ -2207,17 +2346,39 @@ Nano-banana 生图工具 - AI 图片生成应用
                     <!-- AI模型选择 -->
                     <div class="toolbar-section">
                         <label>模型</label>
-                        <select id="modelSelect" title="选择AI模型">
-                            <option value="nano-banana-2">⭐ nano-banana-2 推荐</option>
-                            <option value="nano-banana">nano-banana</option>
+                        <div class="custom-dropdown" id="modelDropdown">
+                            <button class="custom-dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="selected-text">nano-banana-2</span>
+                                <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 9l6 6 6-6"></path>
+                                </svg>
+                            </button>
+                            <div class="custom-dropdown-menu" role="listbox" id="modelDropdownScroll"></div>
+                        </div>
+                        <select id="modelSelect" title="选择AI模型" style="display:none;">
+                            <option value="nano-banana-2">nano-banana-2</option>
                             <option value="nano-banana-pro">nano-banana-pro</option>
+                            <option value="nano-banana">nano-banana</option>
+                            <option value="gpt-image-2">GPT-Image-2</option>
+                            <option value="doubao-seedream-5-0">Doubao-Seedream-5.0</option>
+                            <option value="doubao-seedream-4-5">Doubao-Seedream-4.5</option>
+                            <option value="doubao-seedream-4-0">Doubao-Seedream-4.0</option>
                         </select>
                     </div>
                     
                     <!-- 生成数量选择 -->
                     <div class="toolbar-section">
                         <label>数量</label>
-                        <select id="numSelect" title="选择生成数量">
+                        <div class="custom-dropdown" id="numDropdown">
+                            <button class="custom-dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="selected-text">1张</span>
+                                <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 9l6 6 6-6"></path>
+                                </svg>
+                            </button>
+                            <div class="custom-dropdown-menu" role="listbox" id="numDropdownScroll"></div>
+                        </div>
+                        <select id="numSelect" title="选择生成数量" style="display:none;">
                             <option value="1">1张</option>
                             <option value="2">2张</option>
                             <option value="3">3张</option>
@@ -2483,9 +2644,10 @@ Nano-banana 生图工具 - AI 图片生成应用
         const collectionModalClose = document.getElementById('collectionModalClose');
         const deleteCollectionBtn = document.getElementById('deleteCollectionBtn');
 
-        /* =====================================================
-           2. 全局状态变量
-           ===================================================== */
+/* =====================================================
+            2. 全局状态变量
+            管理应用运行时的各种状态
+            ===================================================== */
         let selectedRatio = 'auto';             // 当前选中的图片比例
         let runningTasks = 0;                    // 当前正在运行的任务数
         let taskQueue = 0;                      // 排队的任务数
@@ -2506,12 +2668,17 @@ Nano-banana 生图工具 - AI 图片生成应用
         const COLLECTION_STORE = 'collections';
         let db = null;
 
-        /* =====================================================
-           4. IndexedDB 数据库初始化
-           ===================================================== */
+/* =====================================================
+            4. IndexedDB 数据库初始化
+            打开或创建数据库
+            ===================================================== */
         /**
          * 初始化 IndexedDB 数据库
          * @returns {Promise<IDBDatabase>} 数据库实例
+         */
+        /**
+         * 初始化 IndexedDB 数据库
+         * 打开或创建数据库，用于存储历史记录和合集
          */
         function initDB() {
             return new Promise((resolve, reject) => {
@@ -2541,9 +2708,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             });
         }
 
-        /* =====================================================
-           5. 合集管理函数
-           ===================================================== */
+/* =====================================================
+            6. 合集管理
+            创建、删除、管理合集
+            ===================================================== */
         /**
          * 从数据库加载所有合集
          */
@@ -2636,6 +2804,10 @@ Nano-banana 生图工具 - AI 图片生成应用
         /**
          * 更新合集选择器（下拉框和标签）的选项
          */
+        /**
+         * 更新合集选择器
+         * 刷新合集下拉列表的选项
+         */
         function updateCollectionSelectors() {
             const filterOptions = `
                 <option value="all">全部作品</option>
@@ -2678,9 +2850,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             updateCollectionSelectors(); // 更新标签高亮
         };
 
-        /* =====================================================
-           6. 历史记录管理函数
-           ===================================================== */
+/* =====================================================
+            5. 历史记录管理
+            添加、删除、保存历史记录
+            ===================================================== */
         /**
          * 从数据库加载所有历史记录
          * @returns {Promise<Array>} 历史记录数组
@@ -2785,9 +2958,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             });
         }
 
-        /* =====================================================
-           7. Toast 提示系统
-           ===================================================== */
+/* =====================================================
+            7. Toast 提示系统
+            显示和隐藏提示消息
+            ===================================================== */
         let toastResolve = null;
         
         /**
@@ -2797,6 +2971,11 @@ Nano-banana 生图工具 - AI 图片生成应用
          * @param {boolean} options.confirm - 是否显示确认/取消按钮
          * @param {number} options.duration - 自动关闭时间（毫秒），0 表示不自动关闭
          * @returns {Promise<boolean>} 用户点击确定返回 true，取消返回 false
+         */
+        /**
+         * 显示 Toast 提示消息
+         * @param {string} msg - 消息文本
+         * @param {Object} options - 配置选项
          */
         function showToast(msg, options = {}) {
             return new Promise((resolve) => {
@@ -2848,9 +3027,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             }
         };
 
-        /* =====================================================
-           8. 历史记录渲染函数
-           ===================================================== */
+/* =====================================================
+            8. UI 渲染函数
+            渲染历史记录项和更新界面
+            ===================================================== */
         let lastRenderedCount = 0;
         const RENDER_BATCH_SIZE = 40;  // 每批渲染的条目数
 
@@ -2919,6 +3099,11 @@ Nano-banana 生图工具 - AI 图片生成应用
         // 移除旧的 toggleGroup 函数，不再需要
         window.toggleGroup = null;
 
+        /**
+         * 渲染历史记录项的 HTML
+         * @param {Object} item - 历史记录项
+         * @param {number} idx - 索引
+         */
         function renderHistoryItemHTML(item, idx) {
             const isPending = item.status === 'pending';
             const isError = item.status === 'error';
@@ -3003,6 +3188,10 @@ Nano-banana 生图工具 - AI 图片生成应用
         let rafId = null;
         let lastWidth = 0;
 
+        /**
+         * 更新布局
+         * @param {number} width - 侧边栏宽度
+         */
         function updateLayout(width) {
             // toolbar 使用 CSS 居中，无需 JS 调整
         }
@@ -3074,6 +3263,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             useHistoryItem(id, e);
         };
 
+        /**
+         * 更新多选模式的 UI
+         * 显示/隐藏选择工具栏，更新选中数量
+         */
         function updateSelectionUI() {
             if (selectedItems.size > 0) {
                 selectionToolbar.classList.add('show');
@@ -3368,6 +3561,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             displayArea.style.borderColor = 'rgba(255, 255, 255, 0.1)';
         });
 
+        /**
+         * 处理参考图片文件
+         * @param {FileList} files - 文件列表
+         */
         function handleFiles(files) {
             Array.from(files).forEach(file => {
                 if (!file.type.startsWith('image/')) return;
@@ -3380,6 +3577,9 @@ Nano-banana 生图工具 - AI 图片生成应用
             });
         }
 
+        /**
+         * 更新参考图片显示
+         */
         function updateRefImagesDisplay() {
             if (referenceImages.length === 0) {
                 refImagesUpload.innerHTML = `
@@ -3445,21 +3645,428 @@ Nano-banana 生图工具 - AI 图片生成应用
             selectedRatio = ratioSelect.value;
         });
 
-        modelSelect.addEventListener('change', () => {
-            if (modelSelect.value === 'nano-banana-2' || modelSelect.value === 'nano-banana-pro') {
-                sizeSection.style.display = 'flex';
+        // 自定义下拉选择器初始化
+        const modelDropdown = document.getElementById('modelDropdown');
+        const modelDropdownTrigger = modelDropdown.querySelector('.custom-dropdown-trigger');
+        const modelSelectedText = modelDropdown.querySelector('.selected-text');
+        const modelDropdownScroll = document.getElementById('modelDropdownScroll');
+
+        /**
+         * 初始化模型选择下拉列表
+         */
+        function initModelDropdown() {
+            modelDropdownScroll.innerHTML = '';
+            const currentModel = modelSelect.value;
+            const modelOptions = Array.from(modelSelect.options).map(opt => ({ value: opt.value, label: opt.text }));
+            modelOptions.forEach(option => {
+                const item = document.createElement('div');
+                item.className = `custom-dropdown-item ${option.value === currentModel ? 'selected' : ''}`;
+                item.setAttribute('role', 'option');
+                item.setAttribute('data-value', option.value);
+                item.innerHTML = `
+                    <span class="dropdown-item-text">${option.label}</span>
+                    <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                `;
+                item.addEventListener('click', () => selectModelOption(option));
+                modelDropdownScroll.appendChild(item);
+            });
+            const currentOption = modelOptions.find(o => o.value === currentModel);
+            if (currentOption) {
+                modelSelectedText.textContent = currentOption.label;
+            }
+        }
+
+        /**
+         * 选择模型选项
+         * @param {Object} option - 选项对象
+         */
+        function selectModelOption(option) {
+            modelSelect.value = option.value;
+            modelSelectedText.textContent = option.label;
+            document.querySelectorAll('.custom-dropdown-item').forEach(item => {
+                item.classList.toggle('selected', item.getAttribute('data-value') === option.value);
+            });
+            // 触发原始 select 的 change 事件
+            modelSelect.dispatchEvent(new Event('change'));
+            closeModelDropdown();
+        }
+
+        /**
+         * 打开模型下拉列表
+         */
+        function openModelDropdown() {
+            modelDropdown.classList.add('open');
+            modelDropdownTrigger.setAttribute('aria-expanded', 'true');
+        }
+
+        /**
+         * 关闭模型下拉列表
+         */
+        function closeModelDropdown() {
+            modelDropdown.classList.remove('open');
+            modelDropdownTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        /**
+         * 切换模型下拉列表状态
+         */
+        function toggleModelDropdown() {
+            if (modelDropdown.classList.contains('open')) {
+                closeModelDropdown();
             } else {
-                sizeSection.style.display = 'none';
+                openModelDropdown();
+            }
+        }
+
+        modelDropdownTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleModelDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!modelDropdown.contains(e.target)) {
+                closeModelDropdown();
             }
         });
 
-        if (modelSelect.value === 'nano-banana-2') {
-            sizeSection.style.display = 'flex';
+        modelDropdownTrigger.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleModelDropdown();
+            } else if (e.key === 'Escape' && modelDropdown.classList.contains('open')) {
+                closeModelDropdown();
+            }
+        });
+
+        // 比例自定义下拉选择器
+        const ratioDropdown = document.getElementById('ratioDropdown');
+        const ratioDropdownTrigger = ratioDropdown.querySelector('.custom-dropdown-trigger');
+        const ratioSelectedText = ratioDropdown.querySelector('.selected-text');
+        const ratioDropdownScroll = document.getElementById('ratioDropdownScroll');
+
+        /**
+         * 初始化比例选择下拉列表
+         */
+        function initRatioDropdown() {
+            ratioDropdownScroll.innerHTML = '';
+            const currentRatio = ratioSelect.value;
+            const ratioOptions = Array.from(ratioSelect.options).map(opt => ({ value: opt.value, label: opt.text }));
+            ratioOptions.forEach(option => {
+                const item = document.createElement('div');
+                item.className = `custom-dropdown-item ${option.value === currentRatio ? 'selected' : ''}`;
+                item.setAttribute('role', 'option');
+                item.setAttribute('data-value', option.value);
+                item.innerHTML = `
+                    <span class="dropdown-item-text">${option.label}</span>
+                    <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                `;
+                item.addEventListener('click', () => selectRatioOption(option));
+                ratioDropdownScroll.appendChild(item);
+            });
+            const currentOption = ratioOptions.find(o => o.value === currentRatio);
+            if (currentOption) {
+                ratioSelectedText.textContent = currentOption.label;
+            }
         }
 
-        /* =====================================================
-           9. 图片生成功能
-           ===================================================== */
+        /**
+         * 选择比例选项
+         * @param {Object} option - 选项对象
+         */
+        function selectRatioOption(option) {
+            ratioSelect.value = option.value;
+            ratioSelectedText.textContent = option.label;
+            selectedRatio = option.value;
+            document.querySelectorAll('#ratioDropdownScroll .custom-dropdown-item').forEach(item => {
+                item.classList.toggle('selected', item.getAttribute('data-value') === option.value);
+            });
+            ratioSelect.dispatchEvent(new Event('change'));
+            closeRatioDropdown();
+        }
+
+        /**
+         * 打开比例下拉列表
+         */
+        function openRatioDropdown() {
+            ratioDropdown.classList.add('open');
+            ratioDropdownTrigger.setAttribute('aria-expanded', 'true');
+        }
+
+        /**
+         * 关闭比例下拉列表
+         */
+        function closeRatioDropdown() {
+            ratioDropdown.classList.remove('open');
+            ratioDropdownTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        /**
+         * 切换比例下拉列表状态
+         */
+        function toggleRatioDropdown() {
+            if (ratioDropdown.classList.contains('open')) {
+                closeRatioDropdown();
+            } else {
+                openRatioDropdown();
+            }
+        }
+
+        ratioDropdownTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleRatioDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!ratioDropdown.contains(e.target)) {
+                closeRatioDropdown();
+            }
+        });
+
+        // 画质自定义下拉选择器
+        const sizeDropdown = document.getElementById('sizeDropdown');
+        const sizeDropdownTrigger = sizeDropdown.querySelector('.custom-dropdown-trigger');
+        const sizeSelectedText = sizeDropdown.querySelector('.selected-text');
+        const sizeDropdownScroll = document.getElementById('sizeDropdownScroll');
+
+        /**
+         * 初始化画质选择下拉列表
+         */
+        function initSizeDropdown() {
+            sizeDropdownScroll.innerHTML = '';
+            const currentSize = sizeSelect.value;
+            const sizeOptions = Array.from(sizeSelect.options).map(opt => ({ value: opt.value, label: opt.text }));
+            sizeOptions.forEach(option => {
+                const item = document.createElement('div');
+                item.className = `custom-dropdown-item ${option.value === currentSize ? 'selected' : ''}`;
+                item.setAttribute('role', 'option');
+                item.setAttribute('data-value', option.value);
+                item.innerHTML = `
+                    <span class="dropdown-item-text">${option.label}</span>
+                    <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                `;
+                item.addEventListener('click', () => selectSizeOption(option));
+                sizeDropdownScroll.appendChild(item);
+            });
+            const currentOption = sizeOptions.find(o => o.value === currentSize);
+            if (currentOption) {
+                sizeSelectedText.textContent = currentOption.label;
+            }
+        }
+
+        /**
+         * 选择画质选项
+         * @param {Object} option - 选项对象
+         */
+        function selectSizeOption(option) {
+            sizeSelect.value = option.value;
+            sizeSelectedText.textContent = option.label;
+            document.querySelectorAll('#sizeDropdownScroll .custom-dropdown-item').forEach(item => {
+                item.classList.toggle('selected', item.getAttribute('data-value') === option.value);
+            });
+            sizeSelect.dispatchEvent(new Event('change'));
+            closeSizeDropdown();
+        }
+
+        /**
+         * 打开画质下拉列表
+         */
+        function openSizeDropdown() {
+            sizeDropdown.classList.add('open');
+            sizeDropdownTrigger.setAttribute('aria-expanded', 'true');
+        }
+
+        /**
+         * 关闭画质下拉列表
+         */
+        function closeSizeDropdown() {
+            sizeDropdown.classList.remove('open');
+            sizeDropdownTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        /**
+         * 切换画质下拉列表状态
+         */
+        function toggleSizeDropdown() {
+            if (sizeDropdown.classList.contains('open')) {
+                closeSizeDropdown();
+            } else {
+                openSizeDropdown();
+            }
+        }
+
+        sizeDropdownTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSizeDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!sizeDropdown.contains(e.target)) {
+                closeSizeDropdown();
+            }
+        });
+
+        // 数量自定义下拉选择器
+        const numDropdown = document.getElementById('numDropdown');
+        const numDropdownTrigger = numDropdown.querySelector('.custom-dropdown-trigger');
+        const numSelectedText = numDropdown.querySelector('.selected-text');
+        const numDropdownScroll = document.getElementById('numDropdownScroll');
+
+        /**
+         * 初始化数量选择下拉列表
+         */
+        function initNumDropdown() {
+            numDropdownScroll.innerHTML = '';
+            const currentNum = numSelect.value;
+            const numOptions = Array.from(numSelect.options).map(opt => ({ value: opt.value, label: opt.text }));
+            numOptions.forEach(option => {
+                const item = document.createElement('div');
+                item.className = `custom-dropdown-item ${option.value === currentNum ? 'selected' : ''}`;
+                item.setAttribute('role', 'option');
+                item.setAttribute('data-value', option.value);
+                item.innerHTML = `
+                    <span class="dropdown-item-text">${option.label}</span>
+                    <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                `;
+                item.addEventListener('click', () => selectNumOption(option));
+                numDropdownScroll.appendChild(item);
+            });
+            const currentOption = numOptions.find(o => o.value === currentNum);
+            if (currentOption) {
+                numSelectedText.textContent = currentOption.label;
+            }
+        }
+
+        /**
+         * 选择数量选项
+         * @param {Object} option - 选项对象
+         */
+        function selectNumOption(option) {
+            numSelect.value = option.value;
+            numSelectedText.textContent = option.label;
+            document.querySelectorAll('#numDropdownScroll .custom-dropdown-item').forEach(item => {
+                item.classList.toggle('selected', item.getAttribute('data-value') === option.value);
+            });
+            numSelect.dispatchEvent(new Event('change'));
+            closeNumDropdown();
+        }
+
+        /**
+         * 打开数量下拉列表
+         */
+        function openNumDropdown() {
+            numDropdown.classList.add('open');
+            numDropdownTrigger.setAttribute('aria-expanded', 'true');
+        }
+
+        /**
+         * 关闭数量下拉列表
+         */
+        function closeNumDropdown() {
+            numDropdown.classList.remove('open');
+            numDropdownTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        /**
+         * 切换数量下拉列表状态
+         */
+        function toggleNumDropdown() {
+            if (numDropdown.classList.contains('open')) {
+                closeNumDropdown();
+            } else {
+                openNumDropdown();
+            }
+        }
+
+        numDropdownTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleNumDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!numDropdown.contains(e.target)) {
+                closeNumDropdown();
+            }
+        });
+
+        // 模型配置
+        const modelConfig = {
+            'nano-banana': {
+                ratios: '1:1,4:3,16:9,9:16,3:4,2:3,3:2,4:5,5:4,21:9',
+                sizes: '1K'
+            },
+            'nano-banana-2': {
+                ratios: '1:1,1:4,1:8,2:3,3:2,3:4,4:1,4:3,4:5,5:4,8:1,9:16,16:9,21:9',
+                sizes: '1K,2K,4K'
+            },
+            'nano-banana-pro': {
+                ratios: '1:1,4:3,16:9,9:16,3:4,2:3,3:2,4:5,5:4,21:9',
+                sizes: '1K,2K,4K'
+            },
+            'gpt-image-2': {
+                ratios: '1:1,2:3,3:2',
+                sizes: '1K'
+            },
+            'doubao-seedream-5-0': {
+                ratios: '1:1,4:3,3:4,16:9,9:16,3:2,2:3,21:9',
+                sizes: '2K,3K'
+            },
+            'doubao-seedream-4-5': {
+                ratios: '1:1,4:3,3:4,16:9,9:16,3:2,2:3,21:9',
+                sizes: '2K,4K'
+            },
+            'doubao-seedream-4-0': {
+                ratios: '1:1,4:3,3:4,16:9,9:16,3:2,2:3,21:9',
+                sizes: '1K,2K,4K'
+            }
+        };
+
+        /**
+         * 应用模型配置
+         * 根据选择的模型更新比例和画质选项
+         * @param {string} model - 模型名称
+         */
+        function applyModelConfig(model) {
+            const config = modelConfig[model];
+            if (config) {
+                ratioSelect.innerHTML = config.ratios.split(',').map(r => `<option value="${r}">${r}</option>`).join('');
+                if (config.sizes) {
+                    sizeSection.style.display = 'flex';
+                    sizeSelect.innerHTML = config.sizes.split(',').map(s => `<option value="${s}">${s}</option>`).join('');
+                } else {
+                    sizeSection.style.display = 'none';
+                }
+            } else {
+                sizeSection.style.display = 'none';
+            }
+            initRatioDropdown();
+            initSizeDropdown();
+        }
+
+        modelSelect.addEventListener('change', () => {
+            applyModelConfig(modelSelect.value);
+        });
+
+        // 初始化：根据当前选择的模型设置
+        applyModelConfig(modelSelect.value);
+
+        // 初始化下拉选择器
+        initModelDropdown();
+        initRatioDropdown();
+        initSizeDropdown();
+        initNumDropdown();
+
+/* =====================================================
+            10. 图片生成逻辑
+            调用 API 生成图片
+            ===================================================== */
         
         // 生成按钮点击事件
         generateBtn.addEventListener('click', generateImage);
@@ -3468,6 +4075,11 @@ Nano-banana 生图工具 - AI 图片生成应用
          * 更新生成按钮的状态和文字
          * @param {number} completedCount - 已完成图片数
          * @param {number} totalCount - 总图片数
+         */
+        /**
+         * 更新生成按钮状态和文字
+         * @param {number} completedCount - 已完成数量
+         * @param {number} totalCount - 总数量
          */
         function updateGenerateBtn(completedCount = 0, totalCount = 0) {
             if (runningTasks > 0) {
@@ -3522,7 +4134,7 @@ Nano-banana 生图工具 - AI 图片生成应用
             const slotsHtml = Array(numImages).fill(0).map((_, i) => `
                 <div class="gen-slot" id="genSlot${taskId}_${i}">
                     <div class="slot-loading-overlay">
-                        <div class="pulse-logo">🍌</div>
+                        <div class="pulse-logo">🪙</div>
                         <div class="spinner" style="width:30px; height:30px;"></div>
                         <div style="color: #666; font-size: 13px; font-weight: 600;">正在构思第 ${i+1} 张...</div>
                     </div>
@@ -3539,18 +4151,33 @@ Nano-banana 生图工具 - AI 图片生成应用
             const modelMap = {
                 'nano-banana-pro': 'gemini-3-pro-image-preview',
                 'nano-banana-2': 'gemini-3.1-flash-image-preview',
-                'nano-banana': 'gemini-2.5-flash-image-preview'
+                'nano-banana': 'gemini-2.5-flash-image-preview',
+                'doubao-seedream-5-0': 'doubao-seedream-5-0-260128',
+                'doubao-seedream-4-5': 'doubao-seedream-4-5-251128',
+                'doubao-seedream-4-0': 'doubao-seedream-4-0-250828',
+                'gpt-image-2': 'gpt-image-2-all'
             };
             const modelsSupportImageInput = ['gemini-3-pro-image-preview', 'gemini-3.1-flash-image-preview'];
             const apiModel = modelMap[selectedModel] || modelMap['nano-banana'];
-            const apiUrl = `https://newapi.asia/v1beta/models/${apiModel}:generateContent?key=${apiKey}`;
-            
-            if (currentRefImages.length > 0 && !modelsSupportImageInput.includes(apiModel)) {
-                showToast('图生图请使用 nano-banana-2 或 nano-banana-pro 模型');
+            // 判断是否使用 OpenAI 风格的图像生成端点（Doubao 系列和 GPT-Image）
+            const isDoubaoModel = selectedModel.startsWith('doubao-seedream');
+            const isGPTImageModel = selectedModel === 'gpt-image-2';
+            const isOpenAIImageEndpoint = isDoubaoModel || isGPTImageModel;
+            const baseUrl = isOpenAIImageEndpoint ? 'https://newapi.asia/v1' : 'https://newapi.asia/v1beta/models';
+            const apiUrl = isOpenAIImageEndpoint
+                ? `${baseUrl}/images/generations?key=${apiKey}`
+                : `${baseUrl}/${apiModel}:generateContent?key=${apiKey}`;
+
+            if (currentRefImages.length > 0 && !modelsSupportImageInput.includes(apiModel) && !isDoubaoModel && !isGPTImageModel) {
+                showToast('图生图请使用 nano-banana-2、nano-banana-pro 或 Doubao 模型');
                 runningTasks--;
                 taskQueue--;
                 updateGenerateBtn();
                 return;
+            }
+
+            if (isGPTImageModel && currentRefImages.length > 0) {
+                // GPT-Image-2 支持图生图，暂不限制
             }
 
             let taskSuccessCount = 0;
@@ -3583,9 +4210,116 @@ Nano-banana 生图工具 - AI 图片生成应用
              */
             async function generateSingleImage(index) {
                 const slot = document.getElementById(`genSlot${taskId}_${index}`);
-                
+
                 let requestBody;
-                if (currentRefImages.length > 0 && modelsSupportImageInput.includes(apiModel)) {
+                // OpenAI 风格的图像生成 API（Doubao 和 GPT-Image）
+                if (isOpenAIImageEndpoint) {
+                    // GPT-Image-2 使用不同的尺寸格式
+                    if (isGPTImageModel) {
+                        // GPT-Image-2: 1:1, 2:3, 3:2 (画质固定1K)
+                        const gptSizeMap = {
+                            '1:1': '1024x1024',
+                            '2:3': '1024x1536',
+                            '3:2': '1536x1024'
+                        };
+                        const gptSize = gptSizeMap[sizeSelect.value] || '1024x1024';
+                        const qualityMap = { '1K': 'standard', '2K': 'high', '4K': 'high' };
+                        requestBody = {
+                            model: apiModel,
+                            prompt: prompt,
+                            n: 1,
+                            size: gptSize,
+                            quality: qualityMap[sizeSelect.value] || 'standard'
+                        };
+                        // GPT-Image-2 图生图支持
+                        if (currentRefImages.length > 0) {
+                            const processImageToBase64 = (img) => {
+                                return new Promise((resolve) => {
+                                    const imgEl = new Image();
+                                    imgEl.onload = () => {
+                                        const canvas = document.createElement('canvas');
+                                        const maxSize = 1024;
+                                        let width = imgEl.width;
+                                        let height = imgEl.height;
+                                        if (width > maxSize || height > maxSize) {
+                                            if (width > height) {
+                                                height = (height / width) * maxSize;
+                                                width = maxSize;
+                                            } else {
+                                                width = (width / height) * maxSize;
+                                                height = maxSize;
+                                            }
+                                        }
+                                        canvas.width = width;
+                                        canvas.height = height;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.drawImage(imgEl, 0, 0, width, height);
+                                        const resizedData = canvas.toDataURL('image/jpeg', 0.85);
+                                        const base64Data = resizedData.split(',')[1].replace(/\s/g, '');
+                                        resolve(`data:image/jpeg;base64,${base64Data}`);
+                                    };
+                                    imgEl.src = img;
+                                });
+                            };
+                            requestBody.image = await processImageToBase64(currentRefImages[0]);
+                        }
+                    } else {
+                        // Doubao 推荐尺寸表（根据文档）
+                        const doubaoSizeMap = {
+                            '2K': { '1:1': '2048x2048', '4:3': '2304x1728', '3:4': '1728x2304', '16:9': '2848x1600', '9:16': '1600x2848', '3:2': '2496x1664', '2:3': '1664x2496', '4:5': '1792x2240', '5:4': '2048x1638', '21:9': '3136x1344', 'auto': '2048x2048' },
+                            '3K': { '1:1': '3072x3072', '4:3': '3456x2592', '3:4': '2592x3456', '16:9': '3648x2048', '9:16': '2048x3648', '3:2': '3456x2304', '2:3': '2304x3456', '4:5': '2688x3360', '5:4': '3072x2457', '21:9': '4032x1728', 'auto': '3072x3072' },
+                            '4K': { '1:1': '4096x4096', '4:3': '4704x3520', '3:4': '3520x4704', '16:9': '5504x3040', '9:16': '3040x5504', '3:2': '4992x3328', '2:3': '3328x4992', '4:5': '3584x4480', '5:4': '4096x3276', '21:9': '6240x2656', 'auto': '4096x4096' },
+                            '1K': { '1:1': '1024x1024', '4:3': '1152x864', '3:4': '864x1152', '16:9': '1280x720', '9:16': '720x1280', '3:2': '1152x768', '2:3': '768x1152', '4:5': '896x1120', '5:4': '1024x819', '21:9': '1280x548', 'auto': '1024x1024' }
+                        };
+
+                        // 根据画质和比例获取像素尺寸
+                        const ratio = selectedRatio === 'auto' ? 'auto' : selectedRatio;
+                        const sizeValue = sizeSelect.value;
+                        const pixelSize = doubaoSizeMap[sizeValue]?.[ratio] || doubaoSizeMap[sizeValue]?.['auto'] || '2048x2048';
+
+                        requestBody = {
+                            model: apiModel,
+                            prompt: prompt,
+                            n: 1,
+                            size: pixelSize,
+                            response_format: 'b64_json',
+                            guidance_scale: 7.5,
+                            sequential_image_generation: 'disabled'
+                        };
+                        // Doubao-Seedream 图生图支持：传入参考图片
+                        if (currentRefImages.length > 0) {
+                            const processImageToBase64 = (img) => {
+                                return new Promise((resolve) => {
+                                    const imgEl = new Image();
+                                    imgEl.onload = () => {
+                                        const canvas = document.createElement('canvas');
+                                        const maxSize = 1024;
+                                        let width = imgEl.width;
+                                        let height = imgEl.height;
+                                        if (width > maxSize || height > maxSize) {
+                                            if (width > height) {
+                                                height = (height / width) * maxSize;
+                                                width = maxSize;
+                                            } else {
+                                                width = (width / height) * maxSize;
+                                                height = maxSize;
+                                            }
+                                        }
+                                        canvas.width = width;
+                                        canvas.height = height;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.drawImage(imgEl, 0, 0, width, height);
+                                        const resizedData = canvas.toDataURL('image/jpeg', 0.85);
+                                        const base64Data = resizedData.split(',')[1].replace(/\s/g, '');
+                                        resolve(`data:image/jpeg;base64,${base64Data}`);
+                                    };
+                                    imgEl.src = img;
+                                });
+                            };
+                            requestBody.image = await processImageToBase64(currentRefImages[0]);
+                        }
+                    }
+                } else if (currentRefImages.length > 0 && modelsSupportImageInput.includes(apiModel)) {
                     const parts = [];
                     const processImage = (img) => {
                         return new Promise((resolve) => {
@@ -3660,7 +4394,8 @@ Nano-banana 生图工具 - AI 图片生成应用
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
                         },
                         body: JSON.stringify(requestBody),
                         signal: controller.signal
@@ -3696,36 +4431,52 @@ Nano-banana 生图工具 - AI 图片生成应用
                     }
 
                     const data = await response.json();
-                    
+
                     if (data.error) {
                         throw new Error(data.error.message || 'API 返回错误');
                     }
-                    
-                    if (!data.candidates || data.candidates.length === 0) {
-                        if (data.promptFeedback?.blockReason) {
-                            throw new Error(`内容被拦截: ${data.promptFeedback.blockReason}`);
-                        }
-                        throw new Error('未收到有效响应');
-                    }
 
-                    const parts = data.candidates?.[0]?.content?.parts || [];
-                    
-                    if (parts.length === 0) {
-                        throw new Error('响应内容为空');
-                    }
-                    
                     let imageUrl = null;
-                    for (const part of parts) {
-                        const imageData = part.inlineData?.data || part.inline_data?.data;
-                        if (imageData) {
-                            if (imageData.startsWith('http')) {
-                                imageUrl = imageData;
-                            } else {
-                                const isJpeg = imageData.startsWith('/9j/') || imageData.startsWith('iVBOR');
+
+                    // Doubao-Seedream 使用 OpenAI 风格的响应格式（b64_json）
+                    if (isOpenAIImageEndpoint) {
+                        if (data.data && data.data.length > 0) {
+                            const b64Image = data.data[0].b64_json;
+                            if (b64Image) {
+                                const isJpeg = b64Image.startsWith('/9j/') || b64Image.startsWith('iVBOR');
                                 const mimeType = isJpeg ? 'image/jpeg' : 'image/png';
-                                imageUrl = `data:${mimeType};base64,${imageData}`;
+                                imageUrl = `data:${mimeType};base64,${b64Image}`;
+                            } else if (data.data[0].url) {
+                                imageUrl = data.data[0].url;
                             }
-                            break;
+                        }
+                    } else {
+                        // Gemini 格式解析
+                        if (!data.candidates || data.candidates.length === 0) {
+                            if (data.promptFeedback?.blockReason) {
+                                throw new Error(`内容被拦截: ${data.promptFeedback.blockReason}`);
+                            }
+                            throw new Error('未收到有效响应');
+                        }
+
+                        const parts = data.candidates?.[0]?.content?.parts || [];
+
+                        if (parts.length === 0) {
+                            throw new Error('响应内容为空');
+                        }
+
+                        for (const part of parts) {
+                            const imageData = part.inlineData?.data || part.inline_data?.data;
+                            if (imageData) {
+                                if (imageData.startsWith('http')) {
+                                    imageUrl = imageData;
+                                } else {
+                                    const isJpeg = imageData.startsWith('/9j/') || imageData.startsWith('iVBOR');
+                                    const mimeType = isJpeg ? 'image/jpeg' : 'image/png';
+                                    imageUrl = `data:${mimeType};base64,${imageData}`;
+                                }
+                                break;
+                            }
                         }
                     }
 
@@ -3847,6 +4598,9 @@ Nano-banana 生图工具 - AI 图片生成应用
          * 初始化图片重叠对比滑块
          * 支持鼠标拖拽和触摸滑动
          */
+        /**
+         * 初始化重叠滑块
+         */
         function initOverlapSlider() {
             const wrapper = document.getElementById('overlapWrapper');
             const slider = document.getElementById('overlapSlider');
@@ -3900,6 +4654,10 @@ Nano-banana 生图工具 - AI 图片生成应用
 
         /**
          * 加载图片并显示分辨率
+         * @param {string} url - 图片 URL
+         */
+        /**
+         * 加载分辨率
          * @param {string} url - 图片 URL
          */
         function loadResolution(url) {
@@ -3966,9 +4724,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             }
         });
 
-        /* =====================================================
-           12. 事件监听器绑定
-           ===================================================== */
+/* =====================================================
+            11. 事件监听器
+            绑定按钮和输入事件
+            ===================================================== */
         
         // 指南按钮 - 显示提示词指南弹窗
         guideBtn.addEventListener('click', () => {
@@ -4035,9 +4794,10 @@ Nano-banana 生图工具 - AI 图片生成应用
             }
         });
 
-        /* =====================================================
-           13. 应用初始化
-           ===================================================== */
+/* =====================================================
+            12. 应用初始化
+            初始化数据库和渲染界面
+            ===================================================== */
         // 初始化数据库并渲染历史记录
         initDB().then(() => renderHistory());
     </script>
