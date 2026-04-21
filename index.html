@@ -2249,7 +2249,7 @@ Nano-banana 生图工具 - AI 图片生成应用
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.5</span></div>
+        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.6</span></div>
         <div class="navbar-links">
             <!-- 画布按钮 - 跳转AI画布 -->
             <a class="nav-btn" href="https://lxjcanvas.netlify.app/" target="_blank" rel="noopener noreferrer">画布</a>
@@ -4011,7 +4011,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                 sizes: '1K,2K,4K'
             },
             'gpt-image-2': {
-                ratios: '1:1,2:3,3:2',
+                ratios: '1:1,2:3,3:2,4:3,3:4,16:9,9:16',
                 sizes: '1K'
             },
             'doubao-seedream-5-0': {
@@ -4216,17 +4216,21 @@ Nano-banana 生图工具 - AI 图片生成应用
                 if (isOpenAIImageEndpoint) {
                     // GPT-Image-2 使用不同的尺寸格式
                     if (isGPTImageModel) {
-                        // GPT-Image-2: 1:1, 2:3, 3:2 (画质固定1K)
+                        // GPT-Image-2: 1:1, 2:3, 3:2, 4:3, 3:4, 16:9, 9:16
                         const gptSizeMap = {
                             '1:1': '1024x1024',
                             '2:3': '1024x1536',
-                            '3:2': '1536x1024'
+                            '3:2': '1536x1024',
+                            '4:3': '1024x768',
+                            '3:4': '768x1024',
+                            '16:9': '1280x720',
+                            '9:16': '720x1280'
                         };
                         const gptSize = gptSizeMap[sizeSelect.value] || '1024x1024';
                         const qualityMap = { '1K': 'standard', '2K': 'high', '4K': 'high' };
                         requestBody = {
                             model: apiModel,
-                            prompt: prompt,
+                            prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
                             n: 1,
                             size: gptSize,
                             quality: qualityMap[sizeSelect.value] || 'standard'
