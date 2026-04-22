@@ -2249,7 +2249,7 @@ Nano-banana 生图工具 - AI 图片生成应用
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.6</span></div>
+        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.7</span></div>
         <div class="navbar-links">
             <!-- 画布按钮 - 跳转AI画布 -->
             <a class="nav-btn" href="https://lxjcanvas.netlify.app/" target="_blank" rel="noopener noreferrer">画布</a>
@@ -4226,7 +4226,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                             '16:9': '1280x720',
                             '9:16': '720x1280'
                         };
-                        const gptSize = gptSizeMap[sizeSelect.value] || '1024x1024';
+                        const gptSize = gptSizeMap[selectedRatio] || '1024x1024';
                         const qualityMap = { '1K': 'standard', '2K': 'high', '4K': 'high' };
                         requestBody = {
                             model: apiModel,
@@ -4240,6 +4240,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                             const processImageToBase64 = (img) => {
                                 return new Promise((resolve) => {
                                     const imgEl = new Image();
+                                    imgEl.crossOrigin = "anonymous";
                                     imgEl.onload = () => {
                                         const canvas = document.createElement('canvas');
                                         const maxSize = 1024;
@@ -4258,9 +4259,15 @@ Nano-banana 生图工具 - AI 图片生成应用
                                         canvas.height = height;
                                         const ctx = canvas.getContext('2d');
                                         ctx.drawImage(imgEl, 0, 0, width, height);
-                                        const resizedData = canvas.toDataURL('image/jpeg', 0.85);
-                                        const base64Data = resizedData.split(',')[1].replace(/\s/g, '');
-                                        resolve(`data:image/jpeg;base64,${base64Data}`);
+                                        try {
+                                            const resizedData = canvas.toDataURL('image/jpeg', 0.85);
+                                            const base64Data = resizedData.split(',')[1].replace(/\s/g, '');
+                                            resolve(`data:image/jpeg;base64,${base64Data}`);
+                                        } catch (e) {
+                                            const resizedData = canvas.toDataURL('image/png');
+                                            const base64Data = resizedData.split(',')[1].replace(/\s/g, '');
+                                            resolve(`data:image/png;base64,${base64Data}`);
+                                        }
                                     };
                                     imgEl.src = img;
                                 });
@@ -4387,13 +4394,14 @@ Nano-banana 生图工具 - AI 图片生成应用
                 try {
                     // AbortController 用于中止正在进行的请求
                     const controller = new AbortController();
-                    
-                    // 根据画质设置超时时间：4K画质10分钟，1K/2K画质5分钟
-                    // 单位为毫秒：600000ms = 10分钟，300000ms = 5分钟
-                    const timeout = sizeSelect.value === '4K' ? 600000 : 300000;
-                    
-                    // 设置定时器，超时后自动中止请求
-                    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+                    // 超时时间：600秒（10分钟），超时后自动中止请求
+                    const timeout = 600000;
+
+                    // 设置定时器，超时后自动中止请求并提示用户
+                    const timeoutId = setTimeout(() => {
+                        controller.abort();
+                    }, timeout);
 
                     const response = await fetch(apiUrl, {
                         method: 'POST',
@@ -4524,9 +4532,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                     taskErrorCount++;
                     let errorMessage = error.message;
                     if (error.name === 'AbortError') {
-                        // 超时提示：显示当前画质对应的超时时间，更加友好
-                        const timeoutMinutes = sizeSelect.value === '4K' ? '10分钟' : '5分钟';
-                        errorMessage = `生成超时（${timeoutMinutes}）`;
+                        errorMessage = '生成超时（600秒）';
                     } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                         errorMessage = '网络连接失败，请检查网络';
                     }
