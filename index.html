@@ -2249,7 +2249,7 @@ Nano-banana 生图工具 - AI 图片生成应用
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.7</span></div>
+        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.8</span></div>
         <div class="navbar-links">
             <!-- 画布按钮 - 跳转AI画布 -->
             <a class="nav-btn" href="https://lxjcanvas.netlify.app/" target="_blank" rel="noopener noreferrer">画布</a>
@@ -2360,6 +2360,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                             <option value="nano-banana-pro">nano-banana-pro</option>
                             <option value="nano-banana">nano-banana</option>
                             <option value="gpt-image-2">GPT-Image-2</option>
+                            <option value="gpt-image-2-all">GPT-Image-2-All</option>
                             <option value="doubao-seedream-5-0">Doubao-Seedream-5.0</option>
                             <option value="doubao-seedream-4-5">Doubao-Seedream-4.5</option>
                             <option value="doubao-seedream-4-0">Doubao-Seedream-4.0</option>
@@ -4014,6 +4015,10 @@ Nano-banana 生图工具 - AI 图片生成应用
                 ratios: '1:1,2:3,3:2,4:3,3:4,16:9,9:16',
                 sizes: '1K'
             },
+            'gpt-image-2-all': {
+                ratios: '1:1,2:3,3:2,4:3,3:4,16:9,9:16',
+                sizes: '1K'
+            },
             'doubao-seedream-5-0': {
                 ratios: '1:1,4:3,3:4,16:9,9:16,3:2,2:3,21:9',
                 sizes: '2K,3K'
@@ -4155,18 +4160,21 @@ Nano-banana 生图工具 - AI 图片生成应用
                 'doubao-seedream-5-0': 'doubao-seedream-5-0-260128',
                 'doubao-seedream-4-5': 'doubao-seedream-4-5-251128',
                 'doubao-seedream-4-0': 'doubao-seedream-4-0-250828',
-                'gpt-image-2': 'gpt-image-2-all'
+                'gpt-image-2': 'gpt-image-2',
+                'gpt-image-2-all': 'gpt-image-2-all'
             };
             const modelsSupportImageInput = ['gemini-3-pro-image-preview', 'gemini-3.1-flash-image-preview'];
             const apiModel = modelMap[selectedModel] || modelMap['nano-banana'];
             // 判断是否使用 OpenAI 风格的图像生成端点（Doubao 系列和 GPT-Image）
             const isDoubaoModel = selectedModel.startsWith('doubao-seedream');
-            const isGPTImageModel = selectedModel === 'gpt-image-2';
+            const isGPTImageModel = selectedModel === 'gpt-image-2' || selectedModel === 'gpt-image-2-all';
             const isOpenAIImageEndpoint = isDoubaoModel || isGPTImageModel;
             const baseUrl = isOpenAIImageEndpoint ? 'https://newapi.asia/v1' : 'https://newapi.asia/v1beta/models';
             const apiUrl = isOpenAIImageEndpoint
                 ? `${baseUrl}/images/generations?key=${apiKey}`
                 : `${baseUrl}/${apiModel}:generateContent?key=${apiKey}`;
+            const gptImageEditUrl = `${baseUrl}/images/edits?key=${apiKey}`;
+            const gptImageGenUrl = `${baseUrl}/images/generations?key=${apiKey}`;
 
             if (currentRefImages.length > 0 && !modelsSupportImageInput.includes(apiModel) && !isDoubaoModel && !isGPTImageModel) {
                 showToast('图生图请使用 nano-banana-2、nano-banana-pro 或 Doubao 模型');
@@ -4227,23 +4235,22 @@ Nano-banana 生图工具 - AI 图片生成应用
                             '9:16': '720x1280'
                         };
                         const gptSize = gptSizeMap[selectedRatio] || '1024x1024';
-                        const qualityMap = { '1K': 'standard', '2K': 'high', '4K': 'high' };
+                        const qualityMap = { '1K': 'auto', '2K': 'high', '4K': 'high' };
                         requestBody = {
                             model: apiModel,
                             prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
                             n: 1,
                             size: gptSize,
-                            quality: qualityMap[sizeSelect.value] || 'standard'
+                            quality: qualityMap[sizeSelect.value] || 'auto'
                         };
-                        // GPT-Image-2 图生图支持
+                        // GPT-Image-2 图生图支持 - 使用 /v1/images/edits 端点
                         if (currentRefImages.length > 0) {
-                            const processImageToBase64 = (img) => {
+                            const processImageFile = (img) => {
                                 return new Promise((resolve) => {
                                     const imgEl = new Image();
-                                    imgEl.crossOrigin = "anonymous";
                                     imgEl.onload = () => {
                                         const canvas = document.createElement('canvas');
-                                        const maxSize = 1024;
+                                        const maxSize = 2048;
                                         let width = imgEl.width;
                                         let height = imgEl.height;
                                         if (width > maxSize || height > maxSize) {
@@ -4259,20 +4266,32 @@ Nano-banana 生图工具 - AI 图片生成应用
                                         canvas.height = height;
                                         const ctx = canvas.getContext('2d');
                                         ctx.drawImage(imgEl, 0, 0, width, height);
-                                        try {
-                                            const resizedData = canvas.toDataURL('image/jpeg', 0.85);
-                                            const base64Data = resizedData.split(',')[1].replace(/\s/g, '');
-                                            resolve(`data:image/jpeg;base64,${base64Data}`);
-                                        } catch (e) {
-                                            const resizedData = canvas.toDataURL('image/png');
-                                            const base64Data = resizedData.split(',')[1].replace(/\s/g, '');
-                                            resolve(`data:image/png;base64,${base64Data}`);
-                                        }
+                                        canvas.toBlob((blob) => {
+                                            const file = new File([blob], 'image.png', { type: 'image/png' });
+                                            resolve(file);
+                                        }, 'image/png', 1.0);
                                     };
                                     imgEl.src = img;
                                 });
                             };
-                            requestBody.image = await processImageToBase64(currentRefImages[0]);
+                            const imageFile = await processImageFile(currentRefImages[0]);
+                            const formData = new FormData();
+                            formData.append('image', imageFile);
+                            formData.append('prompt', `${prompt} [Aspect Ratio: ${selectedRatio}]`);
+                            formData.append('model', apiModel);
+                            formData.append('n', 1);
+                            formData.append('size', gptSize);
+                            formData.append('quality', qualityMap[sizeSelect.value] || 'auto');
+                            formData.append('response_format', 'url');
+                            requestBody = { formData, imageFile, isEditMode: true, gptSize, qualityMap };
+                        } else {
+                            requestBody = {
+                                model: apiModel,
+                                prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
+                                n: 1,
+                                size: gptSize,
+                                quality: qualityMap[sizeSelect.value] || 'auto'
+                            };
                         }
                     } else {
                         // Doubao 推荐尺寸表（根据文档）
@@ -4403,15 +4422,35 @@ Nano-banana 生图工具 - AI 图片生成应用
                         controller.abort();
                     }, timeout);
 
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${apiKey}`
-                        },
-                        body: JSON.stringify(requestBody),
-                        signal: controller.signal
-                    });
+                    let fetchOptions;
+                    if (requestBody.isEditMode) {
+                        const formData = new FormData();
+                        formData.append('image[]', requestBody.imageFile);
+                        formData.append('prompt', `${prompt} [Aspect Ratio: ${selectedRatio}]`);
+                        formData.append('model', apiModel);
+                        formData.append('n', 1);
+                        formData.append('size', requestBody.gptSize);
+                        formData.append('quality', requestBody.qualityMap[sizeSelect.value] || 'auto');
+                        fetchOptions = {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${apiKey}`
+                            },
+                            body: formData,
+                            signal: controller.signal
+                        };
+                    } else {
+                        fetchOptions = {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${apiKey}`
+                            },
+                            body: JSON.stringify(requestBody),
+                            signal: controller.signal
+                        };
+                    }
+                    const response = await fetch(requestBody.isEditMode ? gptImageEditUrl : apiUrl, fetchOptions);
                     clearTimeout(timeoutId);
 
                     if (!response.ok) {
