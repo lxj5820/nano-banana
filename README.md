@@ -2,9 +2,7 @@
 
 界面
 
-![](https://github.com/lxj5820/nano-banana/blob/main/%E7%95%8C%E9%9D%A2.png)
-
-
+![](https://raw.githubusercontent.com/lxj5820/nano-banana/refs/heads/main/%E7%95%8C%E9%9D%A2.png)
 
 基于 AI 的在线图片生成工具，支持文生图、图生图、合集管理与批量下载。
 

@@ -2235,6 +2235,55 @@ Nano-banana 生图工具 - AI 图片生成应用
             margin-bottom: 6px;
             font-size: 0.9rem;
         }
+        .community-popup {
+            position: fixed;
+            z-index: 500;
+            background: #2a2a2a;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: none;
+            text-align: center;
+            width: 280px;
+        }
+        .community-popup.show {
+            display: block;
+        }
+        .community-popup::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 40px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #2a2a2a;
+        }
+        .community-popup .popup-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #FFE135;
+            margin-bottom: 12px;
+        }
+        .community-popup .qr-wrapper {
+            padding: 12px;
+            background: #fff;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .community-popup .qr-wrapper img {
+            width: 200px;
+            height: 200px;
+            display: block;
+            border-radius: 4px;
+        }
+        .community-popup .community-desc {
+            color: #bbb;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
     </style>
     
     <!-- 引入 JSZip 库用于批量下载图片 -->
@@ -2249,7 +2298,7 @@ Nano-banana 生图工具 - AI 图片生成应用
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.8</span></div>
+        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.9</span></div>
         <div class="navbar-links">
             <!-- 画布按钮 - 跳转AI画布 -->
             <a class="nav-btn" href="https://lxjcanvas.netlify.app/" target="_blank" rel="noopener noreferrer">画布</a>
@@ -2259,6 +2308,8 @@ Nano-banana 生图工具 - AI 图片生成应用
             <button class="nav-btn" id="guideBtn">指南</button>
             <!-- 设置按钮 - 打开API配置弹窗 -->
             <button class="nav-btn" id="settingsBtn">设置</button>
+            <!-- 微信按钮 - 打开微信弹窗 -->
+            <button class="nav-btn" id="communityBtn">微信</button>
             <!-- 控制台链接 - 跳转API控制台 -->
             <a class="nav-btn" href="https://newapi.asia/console" target="_blank" rel="noopener noreferrer">控制台</a>
         </div>
@@ -2575,6 +2626,15 @@ Nano-banana 生图工具 - AI 图片生成应用
                 <p>保持（不可改变）+ 改变（修改什么）+ 位置/强度 + 风格 + 光影一致性 + 约束条件</p>
             </div>
         </div>
+    </div>
+
+    <!-- 微信浮窗 -->
+    <div class="community-popup" id="communityPopup">
+        <div class="popup-title">🪙 加入微信</div>
+        <div class="qr-wrapper">
+            <img src="https://raw.githubusercontent.com/lxj5820/nano-banana/refs/heads/main/%E7%A4%BE%E7%BE%A4.png" alt="微信二维码">
+        </div>
+        <div class="community-desc">扫码加入微信，获取最新动态、交流生图技巧</div>
     </div>
 
     <!-- ===========================================================
@@ -4805,6 +4865,27 @@ Nano-banana 生图工具 - AI 图片生成应用
                 guideModal.classList.remove('show');
             }
         });
+
+        // 微信按钮 - 悬停显示微信浮窗
+        const communityBtn = document.getElementById('communityBtn');
+        const communityPopup = document.getElementById('communityPopup');
+        let communityHideTimer = null;
+        function showCommunityPopup() {
+            clearTimeout(communityHideTimer);
+            const rect = communityBtn.getBoundingClientRect();
+            communityPopup.style.top = (rect.bottom + 10) + 'px';
+            communityPopup.style.right = (window.innerWidth - rect.right) + 'px';
+            communityPopup.classList.add('show');
+        }
+        function hideCommunityPopup() {
+            communityHideTimer = setTimeout(() => {
+                communityPopup.classList.remove('show');
+            }, 200);
+        }
+        communityBtn.addEventListener('mouseenter', showCommunityPopup);
+        communityBtn.addEventListener('mouseleave', hideCommunityPopup);
+        communityPopup.addEventListener('mouseenter', () => clearTimeout(communityHideTimer));
+        communityPopup.addEventListener('mouseleave', hideCommunityPopup);
 
         // 设置按钮 - 显示设置弹窗
         settingsBtn.addEventListener('click', () => {
