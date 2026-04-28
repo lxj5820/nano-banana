@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <!--
 =========================================================
-Nano-banana 生图工具 - AI 图片生成应用
+词元AI生图工具 - AI 图片生成应用
 =========================================================
 功能概述：
-- 基于 Gemini API 的 AI 图片生成工具
+- 基于 词元 API 的 AI 图片生成工具
 - 支持文生图、图生图模式
 - 历史记录本地存储（IndexedDB）
 - 合集管理功能
@@ -112,7 +112,7 @@ Nano-banana 生图工具 - AI 图片生成应用
         .main-content {
             flex: 1;
             padding: 10px 40px 20px;
-            overflow: hidden;
+            overflow: visible;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -185,6 +185,39 @@ Nano-banana 生图工具 - AI 图片生成应用
             100% { transform: scale(1); opacity: 0.6; }
         }
 
+        .slot-progress-bar {
+            width: 70%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .slot-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #FFE135, #ffd700);
+            border-radius: 2px;
+            transition: width 0.5s ease-out;
+        }
+        .slot-progress-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slot-progress-percent {
+            color: #FFE135;
+            font-size: 13px;
+            font-weight: 700;
+            min-width: 36px;
+            text-align: right;
+        }
+        .slot-progress-status {
+            color: #555;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
         /* =====================================================
            5. 导航栏样式（覆盖）
            ===================================================== */
@@ -234,7 +267,7 @@ Nano-banana 生图工具 - AI 图片生成应用
         .main-content {
             flex: 1;
             padding: 20px 40px;
-            overflow: hidden;
+            overflow: visible;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -869,8 +902,44 @@ Nano-banana 生图工具 - AI 图片生成应用
             border-radius: 20px;
             padding: 12px 18px;
             box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-            z-index: 500;
-            flex: 1;
+            z-index: 10;
+            flex: none;
+            margin: 16px auto 0;
+            overflow: visible;
+            transition: none;
+            display: flex;
+            flex-direction: column;
+            min-height: 220px;
+        }
+
+        .toolbar-resizer {
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 12px;
+            cursor: ns-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 2px 0;
+        }
+        .toolbar-resizer-bar {
+            width: 36px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.12);
+            transition: all 0.2s;
+        }
+        .toolbar-resizer:hover .toolbar-resizer-bar {
+            background: rgba(255, 225, 53, 0.5);
+            width: 44px;
+        }
+        .toolbar-resizer.active .toolbar-resizer-bar {
+            background: #FFE135;
+            width: 44px;
         }
 
         .toolbar-prompt textarea {
@@ -883,7 +952,6 @@ Nano-banana 生图工具 - AI 图片生成应用
             font-size: 13px;
             resize: none;
             height: 48px;
-            max-height: 100px;
             font-family: inherit;
             line-height: 1.4;
             margin-top: 10px;
@@ -894,12 +962,16 @@ Nano-banana 生图工具 - AI 图片生成应用
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
+            width: 100%;
+            flex: none;
         }
         
         .toolbar-section {
             display: flex;
             align-items: center;
             gap: 4px;
+            min-width: 0;
+            flex-shrink: 1;
         }
         
         .toolbar label {
@@ -910,7 +982,8 @@ Nano-banana 生图工具 - AI 图片生成应用
 
         .custom-dropdown {
             position: relative;
-            min-width: 140px;
+            min-width: 0;
+            flex: 1;
         }
 
         .custom-dropdown-trigger {
@@ -926,6 +999,14 @@ Nano-banana 生图工具 - AI 图片生成应用
             justify-content: space-between;
             align-items: center;
             transition: all 0.2s;
+            overflow: hidden;
+        }
+        .custom-dropdown-trigger .selected-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            min-width: 0;
         }
 
         .custom-dropdown-trigger:hover {
@@ -953,10 +1034,11 @@ Nano-banana 生图工具 - AI 图片生成应用
         .custom-dropdown-menu {
             position: absolute;
             bottom: 100%;
-            left: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
             margin-bottom: 8px;
-            width: 100%;
-            min-width: 140px;
+            min-width: max-content;
+            max-width: 280px;
             background: #1a1a1a;
             border: 1px solid #3f3f46;
             border-radius: 12px;
@@ -964,10 +1046,8 @@ Nano-banana 生图工具 - AI 图片生成应用
             padding: 6px;
             z-index: 100;
             opacity: 0;
-            transform: translateY(10px);
             visibility: hidden;
             transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
-            overflow: visible;
             max-height: 300px;
             overflow-y: auto;
         }
@@ -992,7 +1072,7 @@ Nano-banana 生图工具 - AI 图片生成应用
 
         .custom-dropdown.open .custom-dropdown-menu {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
             visibility: visible;
         }
 
@@ -1008,6 +1088,14 @@ Nano-banana 生图工具 - AI 图片生成应用
             transition: background-color 0.15s, color 0.15s;
             color: #d4d4d8;
             white-space: nowrap;
+            gap: 8px;
+        }
+        .custom-dropdown-item .dropdown-item-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            min-width: 0;
         }
 
         .custom-dropdown-item:hover {
@@ -1059,12 +1147,15 @@ Nano-banana 生图工具 - AI 图片生成应用
             cursor: pointer;
             transition: all 0.2s;
             margin-left: auto;
+            flex-shrink: 0;
+            white-space: nowrap;
         }
 
         .display-area {
             width: 100%;
             max-width: 900px;
-            flex: 2;
+            flex: 1;
+            min-height: 0;
             border-radius: 20px;
             background: rgba(22, 22, 22, 0.6);
             backdrop-filter: blur(16px);
@@ -1076,7 +1167,6 @@ Nano-banana 生图工具 - AI 图片生成应用
             transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
             box-shadow: 0 20px 50px rgba(0,0,0,0.4);
             overflow: hidden;
-            margin-bottom: 260px;
         }
 
         .display-area:hover {
@@ -1088,44 +1178,58 @@ Nano-banana 生图工具 - AI 图片生成应用
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
+            gap: 20px;
             color: #444;
+            padding: 40px 20px;
         }
 
         .display-placeholder-icon {
-            width: 64px;
-            height: 64px;
-            background: #222;
-            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(145deg, #252525 0%, #1a1a1a 100%);
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            animation: placeholderBreathe 3s ease-in-out infinite;
+        }
+
+        @keyframes placeholderBreathe {
+            0%, 100% { box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-color: rgba(255, 255, 255, 0.06); }
+            50% { box-shadow: 0 8px 32px rgba(255, 225, 53, 0.1); border-color: rgba(255, 225, 53, 0.12); }
         }
 
         .display-area:hover .display-placeholder-icon {
-            background: #FFE135;
+            background: linear-gradient(145deg, #FFE135 0%, #ffd700 100%);
             color: #1a1a1a;
-            transform: rotate(90deg);
+            transform: scale(1.08);
+            box-shadow: 0 12px 36px rgba(255, 225, 53, 0.25);
+            border-color: rgba(255, 225, 53, 0.4);
+            animation: none;
         }
 
         .display-placeholder-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             color: #eee;
             margin: 0;
+            letter-spacing: 0.5px;
         }
 
         .display-placeholder-sub {
             font-size: 13px;
             color: #555;
             margin: 0;
+            letter-spacing: 0.3px;
         }
         /* 更新布局计算以适应动态侧边栏 */
         .main-content {
             flex: 1;
-            padding: 20px 30px;
-            overflow: hidden;
+            padding: 20px 30px 20px;
+            overflow: visible;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -1134,43 +1238,81 @@ Nano-banana 生图工具 - AI 图片生成应用
         }
 
         .selection-toolbar {
-            position: absolute;
-            top: 140px;
-            left: 50%;
-            transform: translateX(-50%);
+            position: sticky;
+            top: 0;
+            left: 0;
+            right: 0;
             background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 12px 24px;
-            border-radius: 50px;
+            padding: 10px 20px;
+            border-radius: 14px;
             display: none;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 225, 53, 0.15);
             z-index: 200;
             border: 1px solid rgba(255, 225, 53, 0.2);
+            margin: 0 12px 8px;
         }
         .selection-toolbar.show {
             display: flex;
-            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: selectionSlideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        @keyframes selectionSlideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .selection-toolbar .selection-count {
             color: #FFE135;
             font-weight: 800;
             font-size: 14px;
+            margin-right: 4px;
+            white-space: nowrap;
         }
-        .selection-toolbar .btn-secondary {
+        .selection-toolbar .sel-btn {
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .selection-toolbar .sel-btn-secondary {
             background: rgba(255, 255, 255, 0.08);
-            color: #ddd;
+            color: #ccc;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .selection-toolbar .btn-secondary:hover {
+        .selection-toolbar .sel-btn-secondary:hover {
             background: rgba(255, 255, 255, 0.15);
             color: #fff;
+        }
+        .selection-toolbar .sel-btn-primary {
+            background: rgba(255, 225, 53, 0.15);
+            color: #FFE135;
+            border: 1px solid rgba(255, 225, 53, 0.25);
+        }
+        .selection-toolbar .sel-btn-primary:hover {
+            background: rgba(255, 225, 53, 0.25);
+        }
+        .selection-toolbar .sel-btn-danger {
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .selection-toolbar .sel-btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+        .selection-toolbar .sel-divider {
+            width: 1px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
         }
 
         /* 移除冗余的旧按钮样式 */
@@ -1552,10 +1694,7 @@ Nano-banana 生图工具 - AI 图片生成应用
             letter-spacing: 0.2px;
         }
         .history-item.pending {
-            background: #252525;
-        }
-        .history-item.pending img {
-            display: none;
+            background: #1e1e1e;
         }
         .history-pending {
             width: 100%;
@@ -1564,10 +1703,32 @@ Nano-banana 生图工具 - AI 图片生成应用
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #2a2a2a;
+            background: #1e1e1e;
+            position: relative;
+            overflow: hidden;
         }
-        .history-pending .spinner {
-            border-top-color: #FFE135;
+        .history-shimmer {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                110deg,
+                #1e1e1e 30%,
+                #2a2a2a 50%,
+                #1e1e1e 70%
+            );
+            background-size: 200% 100%;
+            animation: shimmer-slide 1.8s ease-in-out infinite;
+        }
+        @keyframes shimmer-slide {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .history-pending-text {
+            position: relative;
+            z-index: 1;
+            color: #555;
+            font-size: 12px;
+            font-weight: 500;
         }
         .history-item.error {
             background: #251515;
@@ -1702,22 +1863,33 @@ Nano-banana 生图工具 - AI 图片生成应用
             background: #fff;
         }
         .toolbar {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            right: 0;
+            position: relative;
+            bottom: auto;
+            left: auto;
+            right: auto;
             width: 100%;
             max-width: 900px;
-            margin: 0 auto;
-            background: #333;
-            border-radius: 16px;
-            padding: 16px 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            z-index: 100;
+            margin: 16px auto 0;
+            background: rgba(25, 25, 25, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 12px 18px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            z-index: 10;
+            flex: none;
+            display: flex;
+            flex-direction: column;
+            min-height: 220px;
         }
         .toolbar-prompt {
             width: 100%;
             position: relative;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
         }
         .toolbar-prompt textarea {
             width: 100%;
@@ -1729,7 +1901,7 @@ Nano-banana 生图工具 - AI 图片生成应用
             font-size: 14px;
             resize: none;
             min-height: 60px;
-            max-height: 60px;
+            flex: 1;
             font-family: inherit;
             line-height: 1.5;
         }
@@ -1746,6 +1918,7 @@ Nano-banana 生图工具 - AI 图片生成应用
             border: 2px dashed #444;
             border-radius: 10px;
             background: #222;
+            flex: none;
         }
         .ref-images-upload.empty {
             justify-content: center;
@@ -1922,39 +2095,40 @@ Nano-banana 生图工具 - AI 图片生成应用
             gap: 12px;
             width: 100%;
             height: 100%;
-            padding: 16px;
+            padding: 12px;
             grid-template-columns: 1fr;
-            align-content: start;
+            align-content: stretch;
             justify-items: stretch;
             position: relative;
             z-index: 2;
         }
         .gen-slot {
-            min-height: 250px;
-            background: #2a2a2a;
-            border-radius: 8px;
+            min-height: 200px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
             overflow: hidden;
-            padding: 12px;
+            padding: 8px;
         }
         .gen-slots-container.single .gen-slot {
-            min-height: 400px;
+            min-height: 300px;
         }
         .gen-slots-container.double {
             grid-template-columns: repeat(2, 1fr);
         }
         .gen-slots-container.double .gen-slot {
-            min-height: 300px;
+            min-height: 250px;
         }
         .gen-slots-container.multiple {
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         }
         .gen-slots-container.multiple .gen-slot {
-            min-height: 250px;
+            min-height: 200px;
         }
         @media (max-width: 600px) {
             .gen-slots-container.double {
@@ -1962,6 +2136,423 @@ Nano-banana 生图工具 - AI 图片生成应用
             }
             .gen-slots-container.double .gen-slot {
                 min-height: 250px;
+            }
+        }
+
+        /* =====================================================
+           移动端全面适配
+           ===================================================== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 12px;
+                height: 50px;
+                gap: 8px;
+            }
+            .navbar-title {
+                font-size: 0.95rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 40vw;
+            }
+            .navbar-title span {
+                display: none;
+            }
+            .navbar-links {
+                gap: 4px;
+                flex-shrink: 1;
+                overflow-x: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            .navbar-links::-webkit-scrollbar {
+                display: none;
+            }
+            .nav-btn {
+                padding: 5px 10px;
+                font-size: 11px;
+                border-radius: 6px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .app-container {
+                flex-direction: column;
+                height: calc(100vh - 50px);
+            }
+
+            .main-content {
+                padding: 8px 10px;
+                height: auto;
+                flex: 1;
+                min-height: 0;
+                justify-content: flex-start;
+            }
+
+            .display-placeholder-title {
+                font-size: 15px;
+            }
+            .display-placeholder-sub {
+                font-size: 11px;
+            }
+            .display-placeholder-icon {
+                width: 56px;
+                height: 56px;
+                border-radius: 16px;
+            }
+            .display-placeholder {
+                padding: 24px 16px;
+                gap: 14px;
+            }
+
+            .gen-slots-container {
+                gap: 8px;
+                min-height: 150px;
+            }
+            .gen-slots-container.multiple {
+                grid-template-columns: 1fr;
+            }
+            .gen-slots-container.multiple .gen-slot {
+                min-height: 180px;
+            }
+            .gen-slot {
+                border-radius: 10px;
+                max-height: none;
+            }
+            .gen-slots-container.single .gen-slot {
+                min-height: 200px;
+            }
+
+            .toolbar {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                right: auto;
+                width: 100%;
+                max-width: 100%;
+                margin: 8px 0 0;
+                border-radius: 12px;
+                padding: 10px 12px;
+                flex: none;
+                z-index: 10;
+            }
+            .display-area {
+                max-width: 100%;
+                border-radius: 12px;
+                flex: 1;
+                min-height: 0;
+            }
+            .toolbar-prompt textarea {
+                padding: 8px 10px;
+                font-size: 14px;
+                min-height: 44px;
+                height: 44px;
+                border-radius: 8px;
+            }
+            .toolbar-controls {
+                gap: 6px;
+                margin-top: 8px;
+            }
+            .toolbar-section {
+                gap: 3px;
+            }
+            .toolbar label {
+                font-size: 11px;
+            }
+            .custom-dropdown {
+                min-width: 0;
+                flex: 1;
+                max-width: none;
+            }
+            .custom-dropdown-trigger {
+                padding: 5px 22px 5px 8px;
+                font-size: 11px;
+            }
+            .custom-dropdown-menu {
+                min-width: max-content;
+                max-width: 260px;
+                bottom: 100%;
+                margin-bottom: 4px;
+            }
+            .custom-dropdown-item {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+            .btn-generate {
+                padding: 7px 14px;
+                font-size: 12px;
+            }
+            .ref-images-upload {
+                min-height: 50px;
+                padding: 6px;
+                gap: 6px;
+            }
+            .ref-image-box {
+                width: 50px;
+                height: 50px;
+            }
+            .upload-hint {
+                font-size: 11px;
+            }
+
+            .history-sidebar {
+                position: fixed;
+                top: 50px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100% !important;
+                min-width: 100%;
+                max-width: 100%;
+                z-index: 900;
+                border-left: none;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            }
+            .sidebar-resizer {
+                display: none;
+            }
+            .history-header {
+                padding: 12px 12px;
+            }
+            .gallery-label {
+                font-size: 14px;
+            }
+            .history-select-btn {
+                height: 30px;
+                padding: 0 10px;
+                font-size: 11px;
+            }
+            .icon-btn-small {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+            }
+            .collection-tabs-wrapper {
+                padding: 8px 12px;
+                gap: 6px;
+            }
+            .collection-tab {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+            .history-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                padding: 8px 4px;
+            }
+            .history-item {
+                border-radius: 12px;
+            }
+            .history-item:hover {
+                transform: none;
+            }
+            .history-item:hover img.loaded {
+                transform: none;
+            }
+            .history-item img {
+                aspect-ratio: auto;
+                min-height: 160px;
+                max-height: 240px;
+                object-fit: cover;
+            }
+            .history-pending,
+            .history-error {
+                aspect-ratio: auto;
+                min-height: 160px;
+                max-height: 240px;
+            }
+            .history-item-actions {
+                opacity: 1;
+                transform: translateY(0);
+                pointer-events: auto;
+            }
+            .history-item-actions-top,
+            .history-item-actions-bottom {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .action-btn {
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+            }
+            .action-btn svg {
+                width: 14px;
+                height: 14px;
+            }
+            .history-item-info {
+                padding: 10px 12px;
+            }
+            .history-item-prompt {
+                font-size: 12px;
+                margin-bottom: 8px;
+                -webkit-line-clamp: 2;
+            }
+            .history-item-meta {
+                padding-top: 6px;
+            }
+            .history-item-time {
+                font-size: 11px;
+            }
+            .history-item-resolution {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+            .history-item-collection {
+                font-size: 10px;
+                padding: 2px 8px;
+            }
+
+            .selection-toolbar {
+                padding: 8px 12px;
+                gap: 6px;
+                border-radius: 12px;
+                margin: 0 8px 6px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .selection-toolbar .selection-count {
+                font-size: 12px;
+            }
+            .selection-toolbar .sel-btn {
+                padding: 5px 10px;
+                font-size: 11px;
+                gap: 3px;
+            }
+            .selection-toolbar .sel-btn svg {
+                width: 12px;
+                height: 12px;
+            }
+            .selection-toolbar .sel-divider {
+                display: none;
+            }
+
+            .modal {
+                max-width: 95%;
+                padding: 20px 16px;
+                border-radius: 12px;
+            }
+            .modal-title {
+                font-size: 1rem;
+                margin-bottom: 14px;
+            }
+            .guide-modal .modal {
+                max-width: 95%;
+                max-height: 90vh;
+                padding: 16px;
+            }
+            .guide-modal h2 {
+                font-size: 0.95rem;
+            }
+            .guide-modal p,
+            .guide-modal li {
+                font-size: 0.82rem;
+            }
+            .guide-modal .template-box,
+            .guide-modal .example-box {
+                padding: 10px 12px;
+            }
+            .guide-modal .example-content {
+                font-size: 0.8rem;
+            }
+
+            .community-popup {
+                width: 240px;
+                padding: 14px;
+            }
+            .community-popup .qr-wrapper img {
+                width: 160px;
+                height: 160px;
+            }
+
+            .toast-dialog {
+                min-width: 240px;
+                max-width: 90%;
+                padding: 18px 20px;
+            }
+            .toast-message {
+                font-size: 13px;
+            }
+            .toast-btn {
+                padding: 8px 18px;
+                font-size: 13px;
+            }
+
+            .compare-container {
+                flex-direction: column;
+                padding: 10px;
+                gap: 10px;
+            }
+            .overlap-slider::before {
+                width: 24px;
+                height: 24px;
+            }
+            .overlap-slider::after {
+                font-size: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-title {
+                font-size: 0.85rem;
+                max-width: 35vw;
+            }
+            .nav-btn {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+            .main-content {
+                padding: 6px 8px;
+            }
+            .display-area {
+                border-radius: 8px;
+            }
+            .toolbar {
+                padding: 8px 10px;
+                border-radius: 10px;
+            }
+            .toolbar-prompt textarea {
+                min-height: 38px;
+                height: 38px;
+                font-size: 13px;
+            }
+            .toolbar-controls {
+                gap: 4px;
+            }
+            .custom-dropdown {
+                min-width: 0;
+                flex: 1;
+                max-width: none;
+            }
+            .custom-dropdown-trigger {
+                padding: 4px 18px 4px 6px;
+                font-size: 10px;
+                border-radius: 6px;
+            }
+            .btn-generate {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            .history-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .history-item img {
+                min-height: 140px;
+                max-height: 200px;
+            }
+            .history-pending,
+            .history-error {
+                min-height: 140px;
+                max-height: 200px;
+            }
+            .history-item-info {
+                padding: 8px 10px;
+            }
+            .history-item-prompt {
+                font-size: 11px;
+                -webkit-line-clamp: 2;
             }
         }
         .gen-slot .spinner {
@@ -2298,7 +2889,7 @@ Nano-banana 生图工具 - AI 图片生成应用
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V8.9</span></div>
+        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V9.0</span></div>
         <div class="navbar-links">
             <!-- 画布按钮 - 跳转AI画布 -->
             <a class="nav-btn" href="https://lxjcanvas.netlify.app/" target="_blank" rel="noopener noreferrer">画布</a>
@@ -2334,7 +2925,11 @@ Nano-banana 生图工具 - AI 图片生成应用
             </div>
             
             <!-- 底部工具栏 -->
-            <div class="toolbar">
+            <div class="toolbar" id="toolbarContainer">
+                <!-- 拖拽手柄 -->
+                <div class="toolbar-resizer" id="toolbarResizer">
+                    <div class="toolbar-resizer-bar"></div>
+                </div>
                 <!-- 参考图上传区域 -->
                 <div class="ref-images-upload empty" id="refImagesUpload">
                     <input type="file" id="refImagesInput" accept="image/*" multiple class="file-input">
@@ -2493,10 +3088,23 @@ Nano-banana 生图工具 - AI 图片生成应用
             <!-- 多选操作工具栏 -->
             <div class="selection-toolbar" id="selectionToolbar">
                 <span class="selection-count" id="selectionCount">已选中 0 项</span>
-                <button class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="selectAllBtn">全选</button>
-                <button class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="cancelSelectBtn">取消</button>
-                <button class="btn btn-primary btn-sm" style="padding: 6px 12px; font-size: 12px;" id="addToCollectionBtn">加入合集</button>
-                <button class="btn btn-danger btn-sm" style="padding: 6px 12px; font-size: 12px;" id="deleteSelectedBtn">删除</button>
+                <div class="sel-divider"></div>
+                <button class="sel-btn sel-btn-secondary" id="selectAllBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                    全选
+                </button>
+                <button class="sel-btn sel-btn-secondary" id="cancelSelectBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    取消
+                </button>
+                <button class="sel-btn sel-btn-primary" id="addToCollectionBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    加入合集
+                </button>
+                <button class="sel-btn sel-btn-danger" id="deleteSelectedBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    删除
+                </button>
             </div>
             
             <!-- 历史记录网格容器 -->
@@ -3172,7 +3780,7 @@ Nano-banana 生图工具 - AI 图片生成应用
             const collection = item.collectionId ? collections.find(c => c.id === item.collectionId) : null;
             
             const imgContent = isPending 
-                ? `<div class="history-pending"><div class="spinner" style="width:30px;height:30px;border-width:2px;"></div></div>`
+                ? `<div class="history-pending"><div class="history-shimmer"></div><div class="history-pending-text">生成中...</div></div>`
                 : isError
                 ? `<div class="history-error">${item.errorMsg || '请求失败'}</div>`
                 : `<img src="${item.url}" alt="历史图片" loading="lazy" onload="this.classList.add('loaded')">`;
@@ -3305,7 +3913,102 @@ Nano-banana 生图工具 - AI 图片生成应用
         const savedWidth = localStorage.getItem('nanoSidebarWidth');
         if (savedWidth && window.innerWidth > 900) {
             sidebar.style.width = `${savedWidth}px`;
-            // toolbar 使用 CSS 居中，无需 JS 调整
+        }
+
+        // 工具栏向上拉伸逻辑
+        const toolbarResizer = document.getElementById('toolbarResizer');
+        const toolbarContainer = document.getElementById('toolbarContainer');
+        const promptTextarea = document.getElementById('prompt');
+        const displayAreaEl = document.getElementById('displayArea');
+
+        let isToolbarResizing = false;
+        let toolbarResizeStartY = 0;
+        let toolbarResizeStartHeight = 0;
+        let textareaStartHeight = 0;
+        const TOOLBAR_MIN_HEIGHT = 220;
+        const TOOLBAR_MAX_RATIO = 0.75;
+        const TEXTAREA_MIN_HEIGHT = 44;
+        const TEXTAREA_MAX_HEIGHT = 400;
+
+        function getToolbarMaxHeight() {
+            return Math.floor(window.innerHeight * TOOLBAR_MAX_RATIO);
+        }
+
+        toolbarResizer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isToolbarResizing = true;
+            toolbarResizeStartY = e.clientY;
+            toolbarResizeStartHeight = toolbarContainer.offsetHeight;
+            textareaStartHeight = promptTextarea.offsetHeight;
+            toolbarResizer.classList.add('active');
+            document.body.style.cursor = 'ns-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        toolbarResizer.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const touch = e.touches[0];
+            isToolbarResizing = true;
+            toolbarResizeStartY = touch.clientY;
+            toolbarResizeStartHeight = toolbarContainer.offsetHeight;
+            textareaStartHeight = promptTextarea.offsetHeight;
+            toolbarResizer.classList.add('active');
+        }, { passive: false });
+
+        function handleToolbarResize(clientY) {
+            const deltaY = toolbarResizeStartY - clientY;
+            const maxH = getToolbarMaxHeight();
+            let newToolbarHeight = Math.max(TOOLBAR_MIN_HEIGHT, Math.min(maxH, toolbarResizeStartHeight + deltaY));
+            toolbarContainer.style.height = `${newToolbarHeight}px`;
+
+            let newTextareaHeight = textareaStartHeight + deltaY;
+            newTextareaHeight = Math.max(TEXTAREA_MIN_HEIGHT, Math.min(TEXTAREA_MAX_HEIGHT, newTextareaHeight));
+            promptTextarea.style.height = `${newTextareaHeight}px`;
+
+            localStorage.setItem('nanoToolbarHeight', newToolbarHeight);
+            localStorage.setItem('nanoTextareaHeight', newTextareaHeight);
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isToolbarResizing) return;
+            requestAnimationFrame(() => handleToolbarResize(e.clientY));
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isToolbarResizing) return;
+            const touch = e.touches[0];
+            requestAnimationFrame(() => handleToolbarResize(touch.clientY));
+        }, { passive: false });
+
+        function stopToolbarResize() {
+            if (isToolbarResizing) {
+                isToolbarResizing = false;
+                toolbarResizer.classList.remove('active');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        }
+
+        document.addEventListener('mouseup', stopToolbarResize);
+        document.addEventListener('touchend', stopToolbarResize);
+        document.addEventListener('touchcancel', stopToolbarResize);
+
+        // 恢复工具栏和 textarea 高度
+        const savedToolbarHeight = localStorage.getItem('nanoToolbarHeight');
+        const savedTextareaHeight = localStorage.getItem('nanoTextareaHeight');
+        if (savedToolbarHeight) {
+            const h = parseInt(savedToolbarHeight);
+            if (h >= TOOLBAR_MIN_HEIGHT && h <= getToolbarMaxHeight()) {
+                toolbarContainer.style.height = `${h}px`;
+            }
+        }
+        if (savedTextareaHeight) {
+            const h = parseInt(savedTextareaHeight);
+            if (h >= TEXTAREA_MIN_HEIGHT && h <= TEXTAREA_MAX_HEIGHT) {
+                promptTextarea.style.height = `${h}px`;
+            }
         }
 
         window.handleHistoryItemClick = function(id, idx, e) {
@@ -3473,21 +4176,31 @@ Nano-banana 生图工具 - AI 图片生成应用
             e.stopPropagation();
             const item = history.find(h => h.id === id);
             const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:500;overflow:hidden;cursor:zoom-in;';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9998;overflow:hidden;cursor:zoom-in;display:flex;align-items:center;justify-content:center;';
             
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '&times;';
+            closeBtn.style.cssText = 'position:fixed;top:16px;right:16px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(30,30,30,0.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:9999;transition:all 0.2s;line-height:1;';
+            closeBtn.addEventListener('click', (ce) => { ce.stopPropagation(); overlay.remove(); });
+
             const container = document.createElement('div');
             container.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:transform 0.1s ease-out;';
             const img = document.createElement('img');
             img.src = item.url;
-            img.style.cssText = 'max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;display:block;user-select:none;';
+            img.style.cssText = 'max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;display:block;user-select:none;-webkit-user-drag:none;';
             container.appendChild(img);
             overlay.appendChild(container);
+            overlay.appendChild(closeBtn);
 
             let scale = 1;
             let translateX = 0;
             let translateY = 0;
             let isDragging = false;
             let startX = 0, startY = 0;
+            let lastTouchDist = 0;
+            let lastTouchCenter = null;
+            let touchStartTime = 0;
+            let touchMoved = false;
 
             function updateTransform() {
                 container.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${scale})`;
@@ -3501,22 +4214,29 @@ Nano-banana 生图工具 - AI 图片生成应用
                 translateY = Math.max(-maxY, Math.min(maxY, translateY));
             }
 
+            function closeOnSingleTap() {
+                if (scale <= 1) {
+                    overlay.remove();
+                } else {
+                    scale = 1;
+                    translateX = 0;
+                    translateY = 0;
+                    updateTransform();
+                    overlay.style.cursor = 'zoom-in';
+                }
+            }
+
             overlay.addEventListener('wheel', (we) => {
                 we.preventDefault();
-            }, { passive: false });
-            
-            overlay.addEventListener('wheel', (we) => {
                 const delta = we.deltaY > 0 ? -0.2 : 0.2;
-                scale = scale + delta;
-                if (scale < 0.1) scale = 0.1;
-                
+                scale = Math.max(0.1, scale + delta);
                 clampTranslation();
                 updateTransform();
-                
                 overlay.style.cursor = scale > 1 ? 'grab' : 'zoom-in';
-            });
+            }, { passive: false });
 
             overlay.addEventListener('mousedown', (md) => {
+                if (md.target === closeBtn) return;
                 if (scale <= 1) return;
                 isDragging = true;
                 startX = md.clientX - translateX;
@@ -3536,11 +4256,12 @@ Nano-banana 生图工具 - AI 图片生成应用
             document.addEventListener('mouseup', () => {
                 if (isDragging) {
                     isDragging = false;
-                    overlay.style.cursor = 'grab';
+                    overlay.style.cursor = scale > 1 ? 'grab' : 'zoom-in';
                 }
             });
 
-            overlay.addEventListener('dblclick', () => {
+            overlay.addEventListener('dblclick', (de) => {
+                if (de.target === closeBtn) return;
                 if (scale > 1) {
                     scale = 1;
                     translateX = 0;
@@ -3552,12 +4273,69 @@ Nano-banana 生图工具 - AI 图片生成应用
                 overlay.style.cursor = scale > 1 ? 'grab' : 'zoom-in';
             });
 
+            overlay.addEventListener('touchstart', (te) => {
+                if (te.target === closeBtn) return;
+                touchStartTime = Date.now();
+                touchMoved = false;
+                if (te.touches.length === 2) {
+                    const dx = te.touches[0].clientX - te.touches[1].clientX;
+                    const dy = te.touches[0].clientY - te.touches[1].clientY;
+                    lastTouchDist = Math.sqrt(dx * dx + dy * dy);
+                    lastTouchCenter = {
+                        x: (te.touches[0].clientX + te.touches[1].clientX) / 2,
+                        y: (te.touches[0].clientY + te.touches[1].clientY) / 2
+                    };
+                } else if (te.touches.length === 1) {
+                    if (scale > 1) {
+                        isDragging = true;
+                        startX = te.touches[0].clientX - translateX;
+                        startY = te.touches[0].clientY - translateY;
+                    }
+                }
+            }, { passive: true });
+
+            overlay.addEventListener('touchmove', (te) => {
+                if (te.target === closeBtn) return;
+                touchMoved = true;
+                te.preventDefault();
+                if (te.touches.length === 2) {
+                    const dx = te.touches[0].clientX - te.touches[1].clientX;
+                    const dy = te.touches[0].clientY - te.touches[1].clientY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (lastTouchDist > 0) {
+                        const delta = dist / lastTouchDist;
+                        scale = Math.max(0.1, Math.min(10, scale * delta));
+                        clampTranslation();
+                        updateTransform();
+                    }
+                    lastTouchDist = dist;
+                } else if (te.touches.length === 1 && isDragging) {
+                    translateX = te.touches[0].clientX - startX;
+                    translateY = te.touches[0].clientY - startY;
+                    clampTranslation();
+                    updateTransform();
+                }
+            }, { passive: false });
+
+            overlay.addEventListener('touchend', (te) => {
+                isDragging = false;
+                lastTouchDist = 0;
+                lastTouchCenter = null;
+                if (!touchMoved && Date.now() - touchStartTime < 300 && te.changedTouches.length === 1) {
+                    const touch = te.changedTouches[0];
+                    if (touch.target !== closeBtn) {
+                        closeOnSingleTap();
+                    }
+                }
+            });
+
             document.addEventListener('keydown', (kd) => {
                 if (kd.key === 'Escape') overlay.remove();
             });
 
             overlay.addEventListener('click', (ce) => {
-                if (ce.target === overlay) overlay.remove();
+                if (ce.target === closeBtn) return;
+                if (ce.target === overlay) closeOnSingleTap();
             });
 
             document.body.appendChild(overlay);
@@ -3567,21 +4345,47 @@ Nano-banana 生图工具 - AI 图片生成应用
         window.reuseHistoryItem = function(id, e) {
             e.stopPropagation();
             const item = history.find(h => h.id === id);
-            console.log('复用历史项:', item);
             promptInput.value = item.prompt || '';
-            selectedRatio = item.ratio;
-            ratioSelect.value = selectedRatio;
+
+            if (item.ratio) {
+                selectedRatio = item.ratio;
+                ratioSelect.value = selectedRatio;
+                const ratioTrigger = document.querySelector('#ratioDropdown .selected-text');
+                if (ratioTrigger) ratioTrigger.textContent = selectedRatio;
+                document.querySelectorAll('#ratioDropdown .custom-dropdown-item').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value === selectedRatio);
+                });
+            }
+
+            if (item.model) {
+                modelSelect.value = item.model;
+                const modelTrigger = document.querySelector('#modelDropdown .selected-text');
+                if (modelTrigger) {
+                    const modelOption = modelSelect.querySelector(`option[value="${item.model}"]`);
+                    modelTrigger.textContent = modelOption ? modelOption.textContent : item.model;
+                }
+                document.querySelectorAll('#modelDropdown .custom-dropdown-item').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value === item.model);
+                });
+            }
+
+            if (item.size) {
+                sizeSelect.value = item.size;
+                const sizeTrigger = document.querySelector('#sizeDropdown .selected-text');
+                if (sizeTrigger) sizeTrigger.textContent = item.size;
+                document.querySelectorAll('#sizeDropdown .custom-dropdown-item').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value === item.size);
+                });
+            }
+
             const histRefImages = item.refImages || [];
-            console.log('历史参考图数量:', histRefImages.length);
             histRefImages.forEach(img => {
                 if (!referenceImages.some(ref => ref === img)) {
                     referenceImages.push(img);
-                    console.log('添加参考图:', img?.substring(0, 50));
                 }
             });
-            console.log('当前参考图数量:', referenceImages.length);
             updateRefImagesDisplay();
-            showToast('已复用提示词和参考图');
+            showToast('已复用提示词和参数');
         };
 
         window.retryHistoryItem = async function(id, e) {
@@ -3593,8 +4397,38 @@ Nano-banana 生图工具 - AI 图片生成应用
             }
             await deleteHistoryItem(item.id);
             promptInput.value = item.prompt || '';
-            selectedRatio = item.ratio || 'auto';
-            ratioSelect.value = selectedRatio;
+
+            if (item.ratio) {
+                selectedRatio = item.ratio;
+                ratioSelect.value = selectedRatio;
+                const ratioTrigger = document.querySelector('#ratioDropdown .selected-text');
+                if (ratioTrigger) ratioTrigger.textContent = selectedRatio;
+                document.querySelectorAll('#ratioDropdown .custom-dropdown-item').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value === selectedRatio);
+                });
+            }
+
+            if (item.model) {
+                modelSelect.value = item.model;
+                const modelTrigger = document.querySelector('#modelDropdown .selected-text');
+                if (modelTrigger) {
+                    const modelOption = modelSelect.querySelector(`option[value="${item.model}"]`);
+                    modelTrigger.textContent = modelOption ? modelOption.textContent : item.model;
+                }
+                document.querySelectorAll('#modelDropdown .custom-dropdown-item').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value === item.model);
+                });
+            }
+
+            if (item.size) {
+                sizeSelect.value = item.size;
+                const sizeTrigger = document.querySelector('#sizeDropdown .selected-text');
+                if (sizeTrigger) sizeTrigger.textContent = item.size;
+                document.querySelectorAll('#sizeDropdown .custom-dropdown-item').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value === item.size);
+                });
+            }
+
             referenceImages = [];
             (item.refImages || []).forEach(img => {
                 if (!referenceImages.some(ref => ref === img)) {
@@ -4072,11 +4906,11 @@ Nano-banana 生图工具 - AI 图片生成应用
                 sizes: '1K,2K,4K'
             },
             'gpt-image-2': {
-                ratios: '1:1,2:3,3:2,4:3,3:4,16:9,9:16',
+                ratios: 'auto,1:1,2:3,3:2,4:3,3:4,16:9,9:16',
                 sizes: '1K'
             },
             'gpt-image-2-all': {
-                ratios: '1:1,2:3,3:2,4:3,3:4,16:9,9:16',
+                ratios: 'auto,1:1,2:3,3:2,4:3,3:4,16:9,9:16',
                 sizes: '1K'
             },
             'doubao-seedream-5-0': {
@@ -4156,9 +4990,11 @@ Nano-banana 生图工具 - AI 图片生成应用
                 } else {
                     generateBtn.textContent = '生成中';
                 }
+                window.onbeforeunload = () => '图片正在生成中，刷新页面将丢失进度，确定要离开吗？';
             } else {
                 generateBtn.disabled = false;
                 generateBtn.textContent = '生成';
+                window.onbeforeunload = null;
             }
         }
 
@@ -4198,10 +5034,15 @@ Nano-banana 生图工具 - AI 图片生成应用
             
             const slotsHtml = Array(numImages).fill(0).map((_, i) => `
                 <div class="gen-slot" id="genSlot${taskId}_${i}">
-                    <div class="slot-loading-overlay">
+                    <div class="slot-loading-overlay" id="slotLoading${taskId}_${i}">
                         <div class="pulse-logo">🪙</div>
-                        <div class="spinner" style="width:30px; height:30px;"></div>
-                        <div style="color: #666; font-size: 13px; font-weight: 600;">正在构思第 ${i+1} 张...</div>
+                        <div class="slot-progress-bar">
+                            <div class="slot-progress-fill" id="slotProgress${taskId}_${i}"></div>
+                        </div>
+                        <div class="slot-progress-info">
+                            <span class="slot-progress-percent" id="slotPercent${taskId}_${i}">0%</span>
+                            <span class="slot-progress-status">正在构思第 ${i+1} 张...</span>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -4257,6 +5098,8 @@ Nano-banana 生图工具 - AI 图片生成应用
                     url: '', 
                     prompt, 
                     ratio: selectedRatio, 
+                    model: selectedModel,
+                    size: sizeSelect.value,
                     refImages: currentRefImages, 
                     time: timeStr, 
                     resolution: '',
@@ -4278,6 +5121,40 @@ Nano-banana 生图工具 - AI 图片生成应用
              */
             async function generateSingleImage(index) {
                 const slot = document.getElementById(`genSlot${taskId}_${index}`);
+                const progressFill = document.getElementById(`slotProgress${taskId}_${index}`);
+                const percentEl = document.getElementById(`slotPercent${taskId}_${index}`);
+                const statusEl = slot ? slot.querySelector('.slot-progress-status') : null;
+
+                const PROGRESS_DURATION = 200000;
+                const progressStartTime = Date.now();
+                let progressTimer = null;
+
+                function updateProgress() {
+                    const elapsed = Date.now() - progressStartTime;
+                    let progress = Math.min(elapsed / PROGRESS_DURATION, 1);
+                    let percent = Math.floor(progress * 99);
+                    if (percent >= 99) percent = 99;
+                    if (progressFill) progressFill.style.width = percent + '%';
+                    if (percentEl) percentEl.textContent = percent + '%';
+                    if (statusEl) {
+                        if (percent < 30) statusEl.textContent = '正在构思...';
+                        else if (percent < 60) statusEl.textContent = '正在绘制...';
+                        else if (percent < 85) statusEl.textContent = '正在渲染...';
+                        else statusEl.textContent = '即将完成...';
+                    }
+                    if (percent < 99) {
+                        progressTimer = requestAnimationFrame(updateProgress);
+                    }
+                }
+
+                progressTimer = requestAnimationFrame(updateProgress);
+
+                function clearProgress() {
+                    if (progressTimer) {
+                        cancelAnimationFrame(progressTimer);
+                        progressTimer = null;
+                    }
+                }
 
                 let requestBody;
                 // OpenAI 风格的图像生成 API（Doubao 和 GPT-Image）
@@ -4286,6 +5163,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                     if (isGPTImageModel) {
                         // GPT-Image-2: 1:1, 2:3, 3:2, 4:3, 3:4, 16:9, 9:16
                         const gptSizeMap = {
+                            'auto': 'auto',
                             '1:1': '1024x1024',
                             '2:3': '1024x1536',
                             '3:2': '1536x1024',
@@ -4294,14 +5172,14 @@ Nano-banana 生图工具 - AI 图片生成应用
                             '16:9': '1280x720',
                             '9:16': '720x1280'
                         };
-                        const gptSize = gptSizeMap[selectedRatio] || '1024x1024';
-                        const qualityMap = { '1K': 'auto', '2K': 'high', '4K': 'high' };
+                        const gptSize = gptSizeMap[selectedRatio] || 'auto';
+                        const qualityMap = { '1K': 'high', '2K': 'high', '4K': 'high' };
                         requestBody = {
                             model: apiModel,
                             prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
                             n: 1,
                             size: gptSize,
-                            quality: qualityMap[sizeSelect.value] || 'auto'
+                            quality: qualityMap[sizeSelect.value] || 'high'
                         };
                         // GPT-Image-2 图生图支持 - 使用 /v1/images/edits 端点
                         if (currentRefImages.length > 0) {
@@ -4341,7 +5219,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                             formData.append('model', apiModel);
                             formData.append('n', 1);
                             formData.append('size', gptSize);
-                            formData.append('quality', qualityMap[sizeSelect.value] || 'auto');
+                            formData.append('quality', qualityMap[sizeSelect.value] || 'high');
                             formData.append('response_format', 'url');
                             requestBody = { formData, imageFile, isEditMode: true, gptSize, qualityMap };
                         } else {
@@ -4350,7 +5228,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                                 prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
                                 n: 1,
                                 size: gptSize,
-                                quality: qualityMap[sizeSelect.value] || 'auto'
+                                quality: qualityMap[sizeSelect.value] || 'high'
                             };
                         }
                     } else {
@@ -4490,7 +5368,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                         formData.append('model', apiModel);
                         formData.append('n', 1);
                         formData.append('size', requestBody.gptSize);
-                        formData.append('quality', requestBody.qualityMap[sizeSelect.value] || 'auto');
+                        formData.append('quality', requestBody.qualityMap[sizeSelect.value] || 'high');
                         fetchOptions = {
                             method: 'POST',
                             headers: {
@@ -4600,6 +5478,7 @@ Nano-banana 生图工具 - AI 图片生成应用
 
                     const img = new Image();
                     img.onload = () => {
+                        clearProgress();
                         const resolution = `${img.naturalWidth} × ${img.naturalHeight}`;
                         if (slot) {
                             slot.innerHTML = `
@@ -4613,6 +5492,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                         }
                     };
                     img.onerror = () => {
+                        clearProgress();
                         if (slot) {
                             slot.innerHTML = `
                                 <div class="compare-label">图 ${index + 1}</div>
@@ -4628,6 +5508,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                     taskSuccessCount++;
                     
                 } catch (error) {
+                    clearProgress();
                     taskErrorCount++;
                     let errorMessage = error.message;
                     if (error.name === 'AbortError') {
@@ -4640,7 +5521,7 @@ Nano-banana 生图工具 - AI 图片生成应用
                         slot.innerHTML = `<div class="slot-text">生成失败: ${errorMessage}</div>`;
                     }
                     if (placeholderIds[index]) {
-                        updateHistoryItemError(placeholderIds[index], error.message);
+                        updateHistoryItemError(placeholderIds[index], errorMessage);
                     }
                 } finally {
                     taskCompleted++;
@@ -4689,11 +5570,6 @@ Nano-banana 生图工具 - AI 图片生成应用
             }
         }
         
-        /**
-         * 更新历史记录中的错误状态
-         * @param {number} id - 历史记录 ID
-         * @param {string} errorMsg - 错误信息
-         */
         async function updateHistoryItemError(id, errorMsg) {
             try {
                 await updateHistoryItem(id, { status: 'error', errorMsg });
@@ -4932,7 +5808,46 @@ Nano-banana 生图工具 - AI 图片生成应用
             初始化数据库和渲染界面
             ===================================================== */
         // 初始化数据库并渲染历史记录
-        initDB().then(() => renderHistory());
+        initDB().then(async () => {
+            await loadHistory();
+            const pendingItems = history.filter(item => item.status === 'pending');
+            if (pendingItems.length > 0) {
+                for (const item of pendingItems) {
+                    await deleteHistoryItem(item.id);
+                }
+                console.log(`已清理 ${pendingItems.length} 条残留的pending记录`);
+            }
+            renderHistory();
+        });
+
+        /**
+         * 恢复 displayArea 显示最后一次生成的图片
+         * 从 IndexedDB 历史记录中找到最近一次成功生成的图片批次
+         */
+        async function restoreDisplayArea() {
+            const completedItems = history.filter(item => item.status === 'completed' && item.url);
+            if (completedItems.length === 0) return;
+
+            const latestItem = completedItems[0];
+            const batchItems = completedItems.filter(item => item.prompt === latestItem.prompt && item.time === latestItem.time);
+            batchItems.sort((a, b) => (a.taskIndex || 0) - (b.taskIndex || 0));
+
+            const numImages = batchItems.length;
+            const gridColumns = numImages === 1 ? '1fr' : numImages === 2 ? '1fr 1fr' : 'repeat(auto-fit, minmax(350px, 1fr))';
+
+            const slotsHtml = batchItems.map((item, i) => {
+                const resolution = item.resolution || '';
+                return `
+                    <div class="gen-slot" style="cursor:pointer;" onclick="zoomHistoryItem(${item.id}, event)">
+                        <div class="compare-label">图 ${i + 1}</div>
+                        <img src="${item.url}" alt="生成结果" style="width:100%;height:100%;object-fit:contain;">
+                        ${resolution ? `<div class="image-resolution">${resolution}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            displayArea.innerHTML = `<div class="gen-slots-container" style="grid-template-columns: ${gridColumns}">${slotsHtml}</div>`;
+        }
     </script>
 </body>
 </html>
