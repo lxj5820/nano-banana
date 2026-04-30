@@ -2938,7 +2938,7 @@
                 
                 <!-- 提示词输入框 -->
                 <div class="toolbar-prompt">
-                    <textarea id="prompt" placeholder="输入提示词，描述你想要生成的图片..."></textarea>
+                    <textarea id="prompt" maxlength="10000" placeholder="输入提示词，描述你想要生成的图片..."></textarea>
                 </div>
                 
                 <!-- 工具栏控制区域 -->
@@ -5010,8 +5010,8 @@
                 showToast('请输入提示词');
                 return;
             }
-            if (prompt.length > 2000) {
-                showToast('提示词过长，请控制在2000字符以内');
+            if (prompt.length > 10000) {
+                showToast('提示词过长，请控制在10000字符以内');
                 return;
             }
 
