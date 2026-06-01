@@ -2889,7 +2889,7 @@
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V9.0</span></div>
+        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V9.1</span></div>
         <div class="navbar-links">
             <!-- 画布按钮 - 跳转AI画布 -->
             <a class="nav-btn" href="https://lxjcanvas.netlify.app/" target="_blank" rel="noopener noreferrer">画布</a>
@@ -4907,11 +4907,11 @@
             },
             'gpt-image-2': {
                 ratios: 'auto,1:1,2:3,3:2,4:3,3:4,16:9,9:16',
-                sizes: '1K'
+                sizes: '1K,2K,4K'
             },
             'gpt-image-2-all': {
                 ratios: 'auto,1:1,2:3,3:2,4:3,3:4,16:9,9:16',
-                sizes: '1K'
+                sizes: '1K,2K,4K'
             },
             'doubao-seedream-5-0': {
                 ratios: '1:1,4:3,3:4,16:9,9:16,3:2,2:3,21:9',
@@ -5161,26 +5161,44 @@
                 if (isOpenAIImageEndpoint) {
                     // GPT-Image-2 使用不同的尺寸格式
                     if (isGPTImageModel) {
-                        // GPT-Image-2: 1:1, 2:3, 3:2, 4:3, 3:4, 16:9, 9:16
-                        const gptSizeMap = {
-                            'auto': 'auto',
-                            '1:1': '1024x1024',
-                            '2:3': '1024x1536',
-                            '3:2': '1536x1024',
-                            '4:3': '1024x768',
-                            '3:4': '768x1024',
-                            '16:9': '1280x720',
-                            '9:16': '720x1280'
+                        // GPT-Image-2 尺寸表（按 API 严格规则：宽高均为 16px 倍数，最大边 ≤3840px，总像素 655360~8294400，长短边比 ≤3:1）
+                        const gptSizeTable = {
+                            '1K': {
+                                'auto': 'auto',
+                                '1:1': '1024x1024',
+                                '2:3': '1024x1536',
+                                '3:2': '1536x1024',
+                                '4:3': '1024x768',
+                                '3:4': '768x1024',
+                                '16:9': '1280x720',
+                                '9:16': '720x1280'
+                            },
+                            '2K': {
+                                'auto': 'auto',
+                                '1:1': '2048x2048',
+                                '2:3': '1440x2160',
+                                '3:2': '2160x1440',
+                                '4:3': '2048x1536',
+                                '3:4': '1536x2048',
+                                '16:9': '2048x1152',
+                                '9:16': '1152x2048'
+                            },
+                            '4K': {
+                                'auto': 'auto',
+                                '1:1': '2880x2880',
+                                '2:3': '1920x2880',
+                                '3:2': '2880x1920',
+                                '4:3': '2880x2160',
+                                '3:4': '2160x2880',
+                                '16:9': '3840x2160',
+                                '9:16': '2160x3840'
+                            }
                         };
-                        const gptSize = gptSizeMap[selectedRatio] || 'auto';
-                        const qualityMap = { '1K': 'high', '2K': 'high', '4K': 'high' };
-                        requestBody = {
-                            model: apiModel,
-                            prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
-                            n: 1,
-                            size: gptSize,
-                            quality: qualityMap[sizeSelect.value] || 'high'
-                        };
+                        // 画质映射：1K→low，2K→medium，4K→high（API 支持 low/medium/high/auto）
+                        const gptQualityMap = { '1K': 'low', '2K': 'medium', '4K': 'high' };
+                        const sizeTier = sizeSelect.value || '1K';
+                        const gptSize = gptSizeTable[sizeTier]?.[selectedRatio] || gptSizeTable[sizeTier]?.['auto'] || '1024x1024';
+                        const gptQuality = gptQualityMap[sizeTier] || 'high';
                         // GPT-Image-2 图生图支持 - 使用 /v1/images/edits 端点
                         if (currentRefImages.length > 0) {
                             const processImageFile = (img) => {
@@ -5219,16 +5237,16 @@
                             formData.append('model', apiModel);
                             formData.append('n', 1);
                             formData.append('size', gptSize);
-                            formData.append('quality', qualityMap[sizeSelect.value] || 'high');
-                            formData.append('response_format', 'url');
-                            requestBody = { formData, imageFile, isEditMode: true, gptSize, qualityMap };
+                            formData.append('quality', gptQuality);
+                            requestBody = { formData, imageFile, isEditMode: true, gptSize, gptQuality };
                         } else {
                             requestBody = {
                                 model: apiModel,
                                 prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
                                 n: 1,
                                 size: gptSize,
-                                quality: qualityMap[sizeSelect.value] || 'high'
+                                quality: gptQuality,
+                                format: 'png'
                             };
                         }
                     } else {
@@ -5368,7 +5386,7 @@
                         formData.append('model', apiModel);
                         formData.append('n', 1);
                         formData.append('size', requestBody.gptSize);
-                        formData.append('quality', requestBody.qualityMap[sizeSelect.value] || 'high');
+                        formData.append('quality', requestBody.gptQuality || 'high');
                         fetchOptions = {
                             method: 'POST',
                             headers: {
