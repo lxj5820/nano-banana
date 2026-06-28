@@ -2889,7 +2889,7 @@
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V9.1</span></div>
+        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V9.2</span></div>
         <div class="navbar-links">
             <!-- 画布按钮 - 跳转AI画布 -->
             <a class="nav-btn" href="https://lxjcanvas.netlify.app/" target="_blank" rel="noopener noreferrer">画布</a>
@@ -4906,12 +4906,12 @@
                 sizes: '1K,2K,4K'
             },
             'gpt-image-2': {
-                ratios: 'auto,1:1,2:3,3:2,4:3,3:4,16:9,9:16',
+                ratios: 'auto,1:1,2:3,3:2,16:9,9:16',
                 sizes: '1K,2K,4K'
             },
             'gpt-image-2-all': {
-                ratios: 'auto,1:1,2:3,3:2,4:3,3:4,16:9,9:16',
-                sizes: '1K,2K,4K'
+                ratios: 'auto,1:1,2:3,3:2',
+                sizes: '1K'
             },
             'doubao-seedream-5-0': {
                 ratios: '1:1,4:3,3:4,16:9,9:16,3:2,2:3,21:9',
@@ -5159,95 +5159,160 @@
                 let requestBody;
                 // OpenAI 风格的图像生成 API（Doubao 和 GPT-Image）
                 if (isOpenAIImageEndpoint) {
-                    // GPT-Image-2 使用不同的尺寸格式
+                    const isGPTImage2 = selectedModel === 'gpt-image-2';
+                    const isGPTImage2All = selectedModel === 'gpt-image-2-all';
                     if (isGPTImageModel) {
-                        // GPT-Image-2 尺寸表（按 API 严格规则：宽高均为 16px 倍数，最大边 ≤3840px，总像素 655360~8294400，长短边比 ≤3:1）
-                        const gptSizeTable = {
-                            '1K': {
+                        if (isGPTImage2) {
+                            // gpt-image-2 尺寸表：严格使用 API 文档白名单的 7 个预设尺寸
+                            // 1024x1024/1536x1024/1024x1536/2048x2048/2048x1152/3840x2160/2160x3840/auto
+                            const gpt2SizeTable = {
+                                '1K': {
+                                    'auto': 'auto',
+                                    '1:1': '1024x1024',
+                                    '3:2': '1536x1024',
+                                    '2:3': '1024x1536'
+                                },
+                                '2K': {
+                                    'auto': 'auto',
+                                    '1:1': '2048x2048',
+                                    '16:9': '2048x1152'
+                                },
+                                '4K': {
+                                    'auto': 'auto',
+                                    '16:9': '3840x2160',
+                                    '9:16': '2160x3840'
+                                }
+                            };
+                            const gpt2QualityMap = { '1K': 'low', '2K': 'medium', '4K': 'high' };
+                            const sizeTier = sizeSelect.value || '1K';
+                            let gptSize = gpt2SizeTable[sizeTier]?.[selectedRatio];
+                            if (!gptSize) {
+                                const fallbackOrder = {
+                                    '1:1': [['2K', '1:1'], ['1K', '1:1'], 'auto'],
+                                    '3:2': [['1K', '3:2'], 'auto'],
+                                    '2:3': [['1K', '2:3'], 'auto'],
+                                    '16:9': [['4K', '16:9'], ['2K', '16:9'], 'auto'],
+                                    '9:16': [['4K', '9:16'], 'auto'],
+                                    'auto': ['auto']
+                                };
+                                const fallback = fallbackOrder[selectedRatio] || ['auto'];
+                                for (const f of fallback) {
+                                    if (typeof f === 'string') { gptSize = f; break; }
+                                    const v = gpt2SizeTable[f[0]]?.[f[1]];
+                                    if (v) { gptSize = v; break; }
+                                }
+                                gptSize = gptSize || 'auto';
+                            }
+                            const gptQuality = gpt2QualityMap[sizeTier] || 'high';
+
+                            // gpt-image-2 图生图使用 /v1/images/edits 端点（multipart/form-data）
+                            if (currentRefImages.length > 0) {
+                                const processImageFile = (img) => {
+                                    return new Promise((resolve) => {
+                                        const imgEl = new Image();
+                                        imgEl.onload = () => {
+                                            const canvas = document.createElement('canvas');
+                                            const maxSize = 2048;
+                                            let width = imgEl.width;
+                                            let height = imgEl.height;
+                                            if (width > maxSize || height > maxSize) {
+                                                if (width > height) {
+                                                    height = (height / width) * maxSize;
+                                                    width = maxSize;
+                                                } else {
+                                                    width = (width / height) * maxSize;
+                                                    height = maxSize;
+                                                }
+                                            }
+                                            canvas.width = width;
+                                            canvas.height = height;
+                                            const ctx = canvas.getContext('2d');
+                                            ctx.drawImage(imgEl, 0, 0, width, height);
+                                            canvas.toBlob((blob) => {
+                                                const file = new File([blob], 'image.png', { type: 'image/png' });
+                                                resolve(file);
+                                            }, 'image/png', 1.0);
+                                        };
+                                        imgEl.src = img;
+                                    });
+                                };
+                                const imageFile = await processImageFile(currentRefImages[0]);
+                                requestBody = {
+                                    isEditMode: true,
+                                    useEditEndpoint: true,
+                                    editMethod: 'formdata',
+                                    imageFile,
+                                    gptSize,
+                                    gptQuality,
+                                    model: apiModel,
+                                    prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`
+                                };
+                            } else {
+                                requestBody = {
+                                    model: apiModel,
+                                    prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
+                                    n: 1,
+                                    size: gptSize,
+                                    quality: gptQuality,
+                                    format: 'png'
+                                };
+                            }
+                        } else if (isGPTImage2All) {
+                            // gpt-image-2-all 仅支持 3 个尺寸：1024x1024/1536x1024/1024x1536/auto
+                            // 不支持 quality/format 参数；图生图通过 JSON body 的 image 数组传参（非 multipart）
+                            const gptAllSizeMap = {
                                 'auto': 'auto',
                                 '1:1': '1024x1024',
-                                '2:3': '1024x1536',
                                 '3:2': '1536x1024',
-                                '4:3': '1024x768',
-                                '3:4': '768x1024',
-                                '16:9': '1280x720',
-                                '9:16': '720x1280'
-                            },
-                            '2K': {
-                                'auto': 'auto',
-                                '1:1': '2048x2048',
-                                '2:3': '1440x2160',
-                                '3:2': '2160x1440',
-                                '4:3': '2048x1536',
-                                '3:4': '1536x2048',
-                                '16:9': '2048x1152',
-                                '9:16': '1152x2048'
-                            },
-                            '4K': {
-                                'auto': 'auto',
-                                '1:1': '2880x2880',
-                                '2:3': '1920x2880',
-                                '3:2': '2880x1920',
-                                '4:3': '2880x2160',
-                                '3:4': '2160x2880',
-                                '16:9': '3840x2160',
-                                '9:16': '2160x3840'
-                            }
-                        };
-                        // 画质映射：1K→low，2K→medium，4K→high（API 支持 low/medium/high/auto）
-                        const gptQualityMap = { '1K': 'low', '2K': 'medium', '4K': 'high' };
-                        const sizeTier = sizeSelect.value || '1K';
-                        const gptSize = gptSizeTable[sizeTier]?.[selectedRatio] || gptSizeTable[sizeTier]?.['auto'] || '1024x1024';
-                        const gptQuality = gptQualityMap[sizeTier] || 'high';
-                        // GPT-Image-2 图生图支持 - 使用 /v1/images/edits 端点
-                        if (currentRefImages.length > 0) {
-                            const processImageFile = (img) => {
-                                return new Promise((resolve) => {
-                                    const imgEl = new Image();
-                                    imgEl.onload = () => {
-                                        const canvas = document.createElement('canvas');
-                                        const maxSize = 2048;
-                                        let width = imgEl.width;
-                                        let height = imgEl.height;
-                                        if (width > maxSize || height > maxSize) {
-                                            if (width > height) {
-                                                height = (height / width) * maxSize;
-                                                width = maxSize;
-                                            } else {
-                                                width = (width / height) * maxSize;
-                                                height = maxSize;
+                                '2:3': '1024x1536'
+                            };
+                            const gptAllSize = gptAllSizeMap[selectedRatio] || '1024x1024';
+
+                            if (currentRefImages.length > 0) {
+                                const processImageToDataUrl = (img) => {
+                                    return new Promise((resolve) => {
+                                        const imgEl = new Image();
+                                        imgEl.onload = () => {
+                                            const canvas = document.createElement('canvas');
+                                            const maxSize = 2048;
+                                            let width = imgEl.width;
+                                            let height = imgEl.height;
+                                            if (width > maxSize || height > maxSize) {
+                                                if (width > height) {
+                                                    height = (height / width) * maxSize;
+                                                    width = maxSize;
+                                                } else {
+                                                    width = (width / height) * maxSize;
+                                                    height = maxSize;
+                                                }
                                             }
-                                        }
-                                        canvas.width = width;
-                                        canvas.height = height;
-                                        const ctx = canvas.getContext('2d');
-                                        ctx.drawImage(imgEl, 0, 0, width, height);
-                                        canvas.toBlob((blob) => {
-                                            const file = new File([blob], 'image.png', { type: 'image/png' });
-                                            resolve(file);
-                                        }, 'image/png', 1.0);
-                                    };
-                                    imgEl.src = img;
-                                });
-                            };
-                            const imageFile = await processImageFile(currentRefImages[0]);
-                            const formData = new FormData();
-                            formData.append('image', imageFile);
-                            formData.append('prompt', `${prompt} [Aspect Ratio: ${selectedRatio}]`);
-                            formData.append('model', apiModel);
-                            formData.append('n', 1);
-                            formData.append('size', gptSize);
-                            formData.append('quality', gptQuality);
-                            requestBody = { formData, imageFile, isEditMode: true, gptSize, gptQuality };
-                        } else {
-                            requestBody = {
-                                model: apiModel,
-                                prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
-                                n: 1,
-                                size: gptSize,
-                                quality: gptQuality,
-                                format: 'png'
-                            };
+                                            canvas.width = width;
+                                            canvas.height = height;
+                                            const ctx = canvas.getContext('2d');
+                                            ctx.drawImage(imgEl, 0, 0, width, height);
+                                            const dataUrl = canvas.toDataURL('image/png', 1.0);
+                                            resolve(dataUrl);
+                                        };
+                                        imgEl.src = img;
+                                    });
+                                };
+                                const imageDataUrls = await Promise.all(currentRefImages.map(processImageToDataUrl));
+                                requestBody = {
+                                    model: apiModel,
+                                    prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
+                                    n: 1,
+                                    size: gptAllSize,
+                                    image: imageDataUrls,
+                                    response_format: 'url'
+                                };
+                            } else {
+                                requestBody = {
+                                    model: apiModel,
+                                    prompt: `${prompt} [Aspect Ratio: ${selectedRatio}]`,
+                                    n: 1,
+                                    size: gptAllSize
+                                };
+                            }
                         }
                     } else {
                         // Doubao 推荐尺寸表（根据文档）
@@ -5379,11 +5444,12 @@
                     }, timeout);
 
                     let fetchOptions;
-                    if (requestBody.isEditMode) {
+                    let fetchUrl;
+                    if (requestBody.useEditEndpoint) {
                         const formData = new FormData();
-                        formData.append('image[]', requestBody.imageFile);
-                        formData.append('prompt', `${prompt} [Aspect Ratio: ${selectedRatio}]`);
-                        formData.append('model', apiModel);
+                        formData.append('image', requestBody.imageFile);
+                        formData.append('prompt', requestBody.prompt);
+                        formData.append('model', requestBody.model);
                         formData.append('n', 1);
                         formData.append('size', requestBody.gptSize);
                         formData.append('quality', requestBody.gptQuality || 'high');
@@ -5395,18 +5461,27 @@
                             body: formData,
                             signal: controller.signal
                         };
+                        fetchUrl = gptImageEditUrl;
                     } else {
+                        const jsonBody = { ...requestBody };
+                        delete jsonBody.isEditMode;
+                        delete jsonBody.useEditEndpoint;
+                        delete jsonBody.editMethod;
+                        delete jsonBody.imageFile;
+                        delete jsonBody.gptSize;
+                        delete jsonBody.gptQuality;
                         fetchOptions = {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${apiKey}`
                             },
-                            body: JSON.stringify(requestBody),
+                            body: JSON.stringify(jsonBody),
                             signal: controller.signal
                         };
+                        fetchUrl = apiUrl;
                     }
-                    const response = await fetch(requestBody.isEditMode ? gptImageEditUrl : apiUrl, fetchOptions);
+                    const response = await fetch(fetchUrl, fetchOptions);
                     clearTimeout(timeoutId);
 
                     if (!response.ok) {
