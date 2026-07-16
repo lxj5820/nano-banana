@@ -426,6 +426,19 @@
             height: auto;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
+        .history-item-slot {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .history-item-slot .history-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
         .history-item:hover {
             border-color: #FFE135;
             transform: translateY(-3px);
@@ -3502,8 +3515,8 @@
         window.switchCollection = function(id) {
             currentFilter = String(id);
             collectionFilter.value = currentFilter;
-            renderHistory();
-            updateCollectionSelectors(); // 更新标签高亮
+            applyFilter();
+            updateCollectionSelectors();
         };
 
 /* =====================================================
@@ -3514,18 +3527,64 @@
          * 从数据库加载所有历史记录
          * @returns {Promise<Array>} 历史记录数组
          */
-        async function loadHistory() {
+        const MAX_HISTORY_ITEMS = 500;
+        const PAGE_SIZE = 100;
+        let history = [];
+        let totalHistoryCount = 0;
+
+        async function loadHistory(pageIndex = 0) {
             if (!db) await initDB();
             return new Promise((resolve, reject) => {
                 const tx = db.transaction(STORE_NAME, 'readonly');
                 const store = tx.objectStore(STORE_NAME);
-                const request = store.getAll();
+                const countRequest = store.count();
+                countRequest.onsuccess = () => {
+                    totalHistoryCount = Math.min(countRequest.result, MAX_HISTORY_ITEMS);
+                    const cursorRequest = store.openCursor(null, 'prev');
+                    const pageItems = [];
+                    let itemsLoaded = 0;
+                    const skipCount = pageIndex * PAGE_SIZE;
+                    cursorRequest.onsuccess = () => {
+                        const cursor = cursorRequest.result;
+                        if (!cursor || itemsLoaded >= PAGE_SIZE || pageItems.length >= MAX_HISTORY_ITEMS - pageIndex * PAGE_SIZE) {
+                            history = history.concat(pageItems);
+                            resolve({ items: pageItems, hasMore: itemsLoaded >= PAGE_SIZE && history.length < totalHistoryCount });
+                            return;
+                        }
+                        if (itemsLoaded >= skipCount) {
+                            const item = cursor.value;
+                            pageItems.push({
+                                id: item.id,
+                                prompt: item.prompt,
+                                time: item.time,
+                                ratio: item.ratio,
+                                model: item.model,
+                                status: item.status,
+                                resolution: item.resolution,
+                                collectionId: item.collectionId,
+                                errorMsg: item.errorMsg,
+                                size: item.size,
+                                refImages: item.refImages ? item.refImages.length : 0
+                            });
+                        }
+                        itemsLoaded++;
+                        cursor.continue();
+                    };
+                    cursorRequest.onerror = () => reject(cursorRequest.error);
+                };
+                countRequest.onerror = () => reject(countRequest.error);
+            });
+        }
+
+        async function getHistoryImage(id) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.get(id);
                 request.onsuccess = () => {
-                    // 按 ID 降序排列，最新的在前面
-                    history = request.result.sort((a, b) => (b.id || 0) - (a.id || 0));
-                    console.log('加载历史记录:', history.length, '条');
-                    history.forEach((item, i) => console.log(`  [${i}] id:${item.id}, prompt:${item.prompt?.substring(0, 20)}, refImages:${item.refImages?.length || 0}`));
-                    resolve(history);
+                    const item = request.result;
+                    resolve(item ? item.url : null);
                 };
                 request.onerror = () => reject(request.error);
             });
@@ -3688,15 +3747,31 @@
             渲染历史记录项和更新界面
             ===================================================== */
         let lastRenderedCount = 0;
-        const RENDER_BATCH_SIZE = 40;  // 每批渲染的条目数
+        const RENDER_BATCH_SIZE = 40;
+        const VISIBLE_BUFFER = 3;
+        let historyObserver = null;
+        let currentPage = 0;
+        let filteredHistory = [];
 
-        /**
-         * 渲染历史记录列表
-         * 支持分批渲染以提升性能
-         */
+        async function loadMoreHistoryIfNeeded() {
+            if (currentPage === 0) {
+                history = [];
+                currentPage = 0;
+            }
+            const result = await loadHistory(currentPage);
+            if (result.hasMore) {
+                currentPage++;
+            }
+            return result.items;
+        }
+
         async function renderHistory() {
-            await loadHistory();
+            currentPage = 0;
+            history = [];
+            filteredHistory = [];
+            
             await loadCollections();
+            await loadMoreHistoryIfNeeded();
             
             if (history.length === 0) {
                 historySection.style.display = 'none';
@@ -3705,18 +3780,24 @@
             historySection.style.display = 'block';
 
             const galleryContainer = document.getElementById('historyGrid');
-            galleryContainer.innerHTML = ''; // 清空原有内容
+            galleryContainer.innerHTML = '';
+            
+            applyFilter();
+        }
 
-            // 筛选逻辑：只获取当前选中的合集内容
-            let filteredHistory = history;
+        function applyFilter() {
+            const galleryContainer = document.getElementById('historyGrid');
+            galleryContainer.innerHTML = '';
+
             if (currentFilter === 'uncollected') {
                 filteredHistory = history.filter(item => !item.collectionId);
             } else if (currentFilter !== 'all') {
                 const cid = parseInt(currentFilter);
                 filteredHistory = history.filter(item => item.collectionId === cid);
+            } else {
+                filteredHistory = [...history];
             }
 
-            // 扁平化渲染列表，不再分文件夹
             if (filteredHistory.length === 0) {
                 galleryContainer.innerHTML = `
                     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;">
@@ -3729,52 +3810,81 @@
                 return;
             }
 
-            // 分批渲染逻辑：先渲染前 BATCH_SIZE 条
-            const initialItems = filteredHistory.slice(0, RENDER_BATCH_SIZE);
-            galleryContainer.innerHTML = initialItems.map((item, idx) => renderHistoryItemHTML(item, idx)).join('');
-            observeImages();
+            const totalItems = filteredHistory.length;
+            const itemHeight = 180;
+            galleryContainer.style.height = `${totalItems * itemHeight}px`;
             
-            // 延迟渲染剩余项（非阻塞加载）
-            if (filteredHistory.length > RENDER_BATCH_SIZE) {
-                const renderNextBatch = (startIdx) => {
-                    const batchSize = 40;
-                    const endIdx = Math.min(startIdx + batchSize, filteredHistory.length);
-                    const batchItems = filteredHistory.slice(startIdx, endIdx);
-                    const batchHTML = batchItems.map((item, idx) => renderHistoryItemHTML(item, idx + startIdx)).join('');
-                    galleryContainer.insertAdjacentHTML('beforeend', batchHTML);
-                    observeImages();
-                    
-                    if (endIdx < filteredHistory.length) {
-                        setTimeout(() => renderNextBatch(endIdx), 50);
-                    }
-                };
-                setTimeout(() => renderNextBatch(RENDER_BATCH_SIZE), 100);
+            const placeholderDivs = filteredHistory.map((item, idx) => {
+                return `<div class="history-item-slot" data-idx="${idx}" data-id="${item.id}" style="height:${itemHeight}px;"></div>`;
+            }).join('');
+            galleryContainer.innerHTML = placeholderDivs;
+
+            if (historyObserver) {
+                historyObserver.disconnect();
             }
+
+            historyObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const slot = entry.target;
+                        const idx = parseInt(slot.dataset.idx);
+                        const item = filteredHistory[idx];
+                        if (slot.dataset.loaded !== 'true' && item) {
+                            loadAndRenderItem(slot, item, idx);
+                        }
+                    }
+                });
+            }, { rootMargin: '300px' });
+
+            document.querySelectorAll('.history-item-slot').forEach(slot => {
+                historyObserver.observe(slot);
+            });
+
+            const loadMoreSlot = document.createElement('div');
+            loadMoreSlot.className = 'history-load-more-slot';
+            loadMoreSlot.style.height = '50px';
+            galleryContainer.appendChild(loadMoreSlot);
+            
+            const loadMoreObserver = new IntersectionObserver(async (entries) => {
+                entries.forEach(async entry => {
+                    if (entry.isIntersecting && history.length < totalHistoryCount) {
+                        loadMoreObserver.disconnect();
+                        const newItems = await loadMoreHistoryIfNeeded();
+                        if (newItems.length > 0) {
+                            applyFilter();
+                        }
+                    }
+                });
+            }, { rootMargin: '200px' });
+            loadMoreObserver.observe(loadMoreSlot);
         }
 
-        // 移除旧的 toggleGroup 函数，不再需要
-        window.toggleGroup = null;
+        async function loadAndRenderItem(slot, item, idx) {
+            slot.dataset.loaded = 'true';
+            historyObserver.unobserve(slot);
 
-        /**
-         * 渲染历史记录项的 HTML
-         * @param {Object} item - 历史记录项
-         * @param {number} idx - 索引
-         */
-        function renderHistoryItemHTML(item, idx) {
+            let imgUrl = item.url;
+            if (!imgUrl && item.status !== 'pending' && item.status !== 'error') {
+                imgUrl = await getHistoryImage(item.id);
+                if (imgUrl) {
+                    item.url = imgUrl;
+                }
+            }
+
             const isPending = item.status === 'pending';
             const isError = item.status === 'error';
             const isSelected = selectedItems.has(item.id);
             const collection = item.collectionId ? collections.find(c => c.id === item.collectionId) : null;
-            
+
             const imgContent = isPending 
                 ? `<div class="history-pending"><div class="history-shimmer"></div><div class="history-pending-text">生成中...</div></div>`
                 : isError
                 ? `<div class="history-error">${item.errorMsg || '请求失败'}</div>`
-                : `<img src="${item.url}" alt="历史图片" loading="lazy" onload="this.classList.add('loaded')">`;
-            
+                : `<img src="${imgUrl}" alt="历史图片" loading="lazy" onload="this.classList.add('loaded')">`;
+
             const promptPreview = item.prompt || '无提示词';
 
-            return `
+            slot.innerHTML = `
                 <div class="history-item ${isPending ? 'pending' : ''} ${isError ? 'error' : ''} ${isSelected ? 'selected' : ''} ${isSelecting ? 'selecting' : ''} ${!isPending && !isError ? 'skeleton' : ''}" 
                      id="historyItem_${item.id}"
                      onclick="handleHistoryItemClick(${item.id}, ${idx}, event)">
@@ -3811,13 +3921,9 @@
                     </div>
                 </div>
             `;
-        }
 
-        // 骨架屏自动移除逻辑：当图片加载完毕时，移除父级的 skeleton 类
-        function observeImages() {
-            const images = document.querySelectorAll('.history-item img:not([data-observed])');
-            images.forEach(img => {
-                img.setAttribute('data-observed', 'true');
+            const img = slot.querySelector('img');
+            if (img) {
                 if (img.complete) {
                     img.classList.add('loaded');
                     img.closest('.history-item')?.classList.remove('skeleton');
@@ -3831,7 +3937,7 @@
                         img.closest('.history-item')?.classList.remove('skeleton');
                     };
                 }
-            });
+            }
         }
 
         // 侧边栏拉伸逻辑
@@ -4124,20 +4230,28 @@
             }
         });
 
-        window.useHistoryItem = function(id, e) {
-            if (e.target.closest('button')) return; // Ignore clicks on zoom/download/etc buttons
-            const item = history.find(h => h.id === id);
-            if (!item.url) return;
+        window.useHistoryItem = async function(id, e) {
+            if (e.target.closest('button')) return;
+            let item = history.find(h => h.id === id);
+            if (!item) return;
+            if (!item.url) {
+                item.url = await getHistoryImage(id);
+                if (!item.url) return;
+            }
             if (!referenceImages.includes(item.url)) {
                 referenceImages.push(item.url);
             }
             updateRefImagesDisplay();
         };
 
-        window.downloadHistoryItem = function(id, e) {
+        window.downloadHistoryItem = async function(id, e) {
             e.stopPropagation();
-            const item = history.find(h => h.id === id);
-            if (!item.url) return;
+            let item = history.find(h => h.id === id);
+            if (!item) return;
+            if (!item.url) {
+                item.url = await getHistoryImage(id);
+                if (!item.url) return;
+            }
             const link = document.createElement('a');
             link.href = item.url;
             link.download = `nano-banana-${item.time.replace(/\//g, '-').replace(/:/g, '')}.png`;
@@ -4159,9 +4273,14 @@
             }
         };
 
-        window.zoomHistoryItem = function(id, e) {
+        window.zoomHistoryItem = async function(id, e) {
             e.stopPropagation();
-            const item = history.find(h => h.id === id);
+            let item = history.find(h => h.id === id);
+            if (!item) return;
+            if (!item.url) {
+                item.url = await getHistoryImage(id);
+                if (!item.url) return;
+            }
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9998;overflow:hidden;cursor:zoom-in;display:flex;align-items:center;justify-content:center;';
             
