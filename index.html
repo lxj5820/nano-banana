@@ -14,7 +14,7 @@
 主要技术栈：
 - 纯原生 HTML/CSS/JavaScript
 - IndexedDB 本地数据库
-- Gemini API（newapi.asia）
+- Gemini API（lixuejianapi.xyz）
 - JSZip 库（用于批量下载）
 =========================================================
 -->
@@ -425,19 +425,6 @@
             flex-direction: column;
             height: auto;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .history-item-slot {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .history-item-slot .history-item {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
         }
         .history-item:hover {
             border-color: #FFE135;
@@ -2902,7 +2889,7 @@
          1. 顶部导航栏
          =========================================================== -->
     <nav class="navbar">
-        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V9.2</span></div>
+        <div class="navbar-title">🪙 词元AI生图工坊 <span style="font-size: 12px; color: #aaa; margin-left: 8px;">V9.3</span></div>
         <div class="navbar-links">
             <!-- 图库按钮 - 切换历史记录侧边栏 -->
             <button class="nav-btn" id="galleryBtn">图库</button>
@@ -2911,7 +2898,7 @@
             <!-- 设置按钮 - 打开API配置弹窗 -->
             <button class="nav-btn" id="settingsBtn">设置</button>
             <!-- 控制台链接 - 跳转API控制台 -->
-            <a class="nav-btn" href="https://newapi.asia/console" target="_blank" rel="noopener noreferrer">控制台</a>
+            <a class="nav-btn" href="https://lixuejianapi.xyz/console" target="_blank" rel="noopener noreferrer">控制台</a>
         </div>
     </nav>
 
@@ -2997,6 +2984,28 @@
                             <option value="4K">4K</option>
                         </select>
                     </div>
+
+                    <!-- 清晰度选择（仅 gpt-image-2.5 系列显示） -->
+                    <div class="toolbar-section" id="qualitySection" style="display:none;">
+                        <label>清晰度</label>
+                        <div class="custom-dropdown" id="qualityDropdown">
+                            <button class="custom-dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="selected-text">auto</span>
+                                <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 9l6 6 6-6"></path>
+                                </svg>
+                            </button>
+                            <div class="custom-dropdown-menu" role="listbox" id="qualityDropdownScroll"></div>
+                        </div>
+                        <select id="qualitySelect" title="选择图片清晰度" style="display:none;">
+                            <option value="auto">auto</option>
+                            <option value="low">low</option>
+                            <option value="medium">medium</option>
+                            <option value="high">high</option>
+                            <option value="xhigh">xhigh</option>
+                            <option value="max">max</option>
+                        </select>
+                    </div>
                     
                     <!-- AI模型选择 -->
                     <div class="toolbar-section">
@@ -3016,6 +3025,9 @@
                             <option value="nano-banana">nano-banana</option>
                             <option value="gpt-image-2">GPT-Image-2</option>
                             <option value="gpt-image-2-all">GPT-Image-2-All</option>
+                            <option value="gpt-image-2.5-flare">GPT-Image-2.5-Flare</option>
+                            <option value="gpt-image-2.5-sunburst-c">GPT-Image-2.5-Sunburst-C</option>
+                            <option value="gpt-image-2.5-flare-c">GPT-Image-2.5-Flare-C</option>
                             <option value="doubao-seedream-5-0">Doubao-Seedream-5.0</option>
                             <option value="doubao-seedream-4-5">Doubao-Seedream-4.5</option>
                             <option value="doubao-seedream-4-0">Doubao-Seedream-4.0</option>
@@ -3158,7 +3170,7 @@
                 <button class="modal-close" id="modalClose">&times;</button>
             </div>
             <div class="form-group">
-                <label>API Key <a href="https://newapi.asia/register?channel=c_ripg6oed" target="_blank" rel="noopener noreferrer" class="api-link">[获取API]</a></label>
+                <label>API Key <a href="https://lixuejianapi.xyz/register" target="_blank" rel="noopener noreferrer" class="api-link">[获取API]</a></label>
                 <input type="password" id="modalApiKey" placeholder="输入 API Key">
             </div>
             <div class="form-group" style="background:#2a2a2a;padding:12px;border-radius:8px;margin-top:8px;">
@@ -3293,6 +3305,8 @@
         const toast = document.getElementById('toast');
         const sizeSelect = document.getElementById('sizeSelect');
         const sizeSection = document.getElementById('sizeSection');
+        const qualitySelect = document.getElementById('qualitySelect');
+        const qualitySection = document.getElementById('qualitySection');
         const modelSelect = document.getElementById('modelSelect');
         const numSelect = document.getElementById('numSelect');
         const refImagesUpload = document.getElementById('refImagesUpload');
@@ -3529,7 +3543,6 @@
          */
         const MAX_HISTORY_ITEMS = 500;
         const PAGE_SIZE = 100;
-        let history = [];
         let totalHistoryCount = 0;
 
         async function loadHistory(pageIndex = 0) {
@@ -3546,27 +3559,30 @@
                     const skipCount = pageIndex * PAGE_SIZE;
                     cursorRequest.onsuccess = () => {
                         const cursor = cursorRequest.result;
-                        if (!cursor || itemsLoaded >= PAGE_SIZE || pageItems.length >= MAX_HISTORY_ITEMS - pageIndex * PAGE_SIZE) {
+                        if (!cursor || pageItems.length >= PAGE_SIZE || pageItems.length >= MAX_HISTORY_ITEMS - pageIndex * PAGE_SIZE) {
                             history = history.concat(pageItems);
-                            resolve({ items: pageItems, hasMore: itemsLoaded >= PAGE_SIZE && history.length < totalHistoryCount });
+                            resolve({ items: pageItems, hasMore: pageItems.length >= PAGE_SIZE && history.length < totalHistoryCount });
                             return;
                         }
-                        if (itemsLoaded >= skipCount) {
-                            const item = cursor.value;
-                            pageItems.push({
-                                id: item.id,
-                                prompt: item.prompt,
-                                time: item.time,
-                                ratio: item.ratio,
-                                model: item.model,
-                                status: item.status,
-                                resolution: item.resolution,
-                                collectionId: item.collectionId,
-                                errorMsg: item.errorMsg,
-                                size: item.size,
-                                refImages: item.refImages ? item.refImages.length : 0
-                            });
+                        if (itemsLoaded < skipCount) {
+                            itemsLoaded++;
+                            cursor.continue();
+                            return;
                         }
+                        const item = cursor.value;
+                        pageItems.push({
+                            id: item.id,
+                            prompt: item.prompt,
+                            time: item.time,
+                            ratio: item.ratio,
+                            model: item.model,
+                            status: item.status,
+                            resolution: item.resolution,
+                            collectionId: item.collectionId,
+                            errorMsg: item.errorMsg,
+                            size: item.size,
+                            refImages: item.refImages ? item.refImages.length : 0
+                        });
                         itemsLoaded++;
                         cursor.continue();
                     };
@@ -3586,6 +3602,17 @@
                     const item = request.result;
                     resolve(item ? item.url : null);
                 };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getHistoryFullItem(id) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.get(id);
+                request.onsuccess = () => resolve(request.result || null);
                 request.onerror = () => reject(request.error);
             });
         }
@@ -3788,6 +3815,7 @@
         function applyFilter() {
             const galleryContainer = document.getElementById('historyGrid');
             galleryContainer.innerHTML = '';
+            galleryContainer.style.height = '';
 
             if (currentFilter === 'uncollected') {
                 filteredHistory = history.filter(item => !item.collectionId);
@@ -3810,14 +3838,7 @@
                 return;
             }
 
-            const totalItems = filteredHistory.length;
-            const itemHeight = 180;
-            galleryContainer.style.height = `${totalItems * itemHeight}px`;
-            
-            const placeholderDivs = filteredHistory.map((item, idx) => {
-                return `<div class="history-item-slot" data-idx="${idx}" data-id="${item.id}" style="height:${itemHeight}px;"></div>`;
-            }).join('');
-            galleryContainer.innerHTML = placeholderDivs;
+            galleryContainer.innerHTML = filteredHistory.map((item, idx) => renderHistoryItemHTML(item, idx)).join('');
 
             if (historyObserver) {
                 historyObserver.disconnect();
@@ -3826,18 +3847,19 @@
             historyObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        const slot = entry.target;
-                        const idx = parseInt(slot.dataset.idx);
-                        const item = filteredHistory[idx];
-                        if (slot.dataset.loaded !== 'true' && item) {
-                            loadAndRenderItem(slot, item, idx);
+                        const img = entry.target;
+                        const id = parseInt(img.dataset.id);
+                        if (img.dataset.loaded !== 'true') {
+                            img.dataset.loaded = 'true';
+                            historyObserver.unobserve(img);
+                            loadItemImage(id, img);
                         }
                     }
                 });
             }, { rootMargin: '300px' });
 
-            document.querySelectorAll('.history-item-slot').forEach(slot => {
-                historyObserver.observe(slot);
+            document.querySelectorAll('.history-item img[data-lazy="true"]').forEach(img => {
+                historyObserver.observe(img);
             });
 
             const loadMoreSlot = document.createElement('div');
@@ -3851,7 +3873,7 @@
                         loadMoreObserver.disconnect();
                         const newItems = await loadMoreHistoryIfNeeded();
                         if (newItems.length > 0) {
-                            applyFilter();
+                            appendNewItems(newItems);
                         }
                     }
                 });
@@ -3859,32 +3881,75 @@
             loadMoreObserver.observe(loadMoreSlot);
         }
 
-        async function loadAndRenderItem(slot, item, idx) {
-            slot.dataset.loaded = 'true';
-            historyObserver.unobserve(slot);
-
-            let imgUrl = item.url;
-            if (!imgUrl && item.status !== 'pending' && item.status !== 'error') {
-                imgUrl = await getHistoryImage(item.id);
-                if (imgUrl) {
-                    item.url = imgUrl;
-                }
+        function appendNewItems(newItems) {
+            const galleryContainer = document.getElementById('historyGrid');
+            const loadMoreSlot = galleryContainer.querySelector('.history-load-more-slot');
+            
+            const newFiltered = newItems.filter(item => {
+                if (currentFilter === 'uncollected') return !item.collectionId;
+                if (currentFilter !== 'all') return item.collectionId === parseInt(currentFilter);
+                return true;
+            });
+            
+            filteredHistory = filteredHistory.concat(newFiltered);
+            
+            const startIdx = filteredHistory.length - newFiltered.length;
+            const newHTML = newFiltered.map((item, i) => renderHistoryItemHTML(item, startIdx + i)).join('');
+            
+            if (loadMoreSlot) {
+                loadMoreSlot.insertAdjacentHTML('beforebegin', newHTML);
+            } else {
+                galleryContainer.insertAdjacentHTML('beforeend', newHTML);
             }
 
+            document.querySelectorAll('.history-item img[data-lazy="true"]:not([data-loaded])').forEach(img => {
+                historyObserver.observe(img);
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function loadItemImage(id, imgEl) {
+            try {
+                const url = await getHistoryImage(id);
+                if (url) {
+                    const item = history.find(h => h.id === id);
+                    if (item) item.url = url;
+                    imgEl.src = url;
+                    imgEl.onload = () => {
+                        imgEl.classList.add('loaded');
+                        imgEl.closest('.history-item')?.classList.remove('skeleton');
+                    };
+                    imgEl.onerror = () => {
+                        imgEl.classList.add('loaded');
+                        imgEl.closest('.history-item')?.classList.remove('skeleton');
+                    };
+                }
+            } catch (e) {
+                console.warn('加载图片失败:', id, e);
+            }
+        }
+
+        function renderHistoryItemHTML(item, idx) {
             const isPending = item.status === 'pending';
             const isError = item.status === 'error';
             const isSelected = selectedItems.has(item.id);
             const collection = item.collectionId ? collections.find(c => c.id === item.collectionId) : null;
-
+            
             const imgContent = isPending 
                 ? `<div class="history-pending"><div class="history-shimmer"></div><div class="history-pending-text">生成中...</div></div>`
                 : isError
-                ? `<div class="history-error">${item.errorMsg || '请求失败'}</div>`
-                : `<img src="${imgUrl}" alt="历史图片" loading="lazy" onload="this.classList.add('loaded')">`;
+                ? `<div class="history-error">${escapeHtml(item.errorMsg) || '请求失败'}</div>`
+                : `<img data-lazy="true" data-id="${item.id}" alt="历史图片" loading="lazy">`;
+            
+            const promptPreview = escapeHtml(item.prompt) || '无提示词';
 
-            const promptPreview = item.prompt || '无提示词';
-
-            slot.innerHTML = `
+            return `
                 <div class="history-item ${isPending ? 'pending' : ''} ${isError ? 'error' : ''} ${isSelected ? 'selected' : ''} ${isSelecting ? 'selecting' : ''} ${!isPending && !isError ? 'skeleton' : ''}" 
                      id="historyItem_${item.id}"
                      onclick="handleHistoryItemClick(${item.id}, ${idx}, event)">
@@ -3912,32 +3977,15 @@
                         </div>
                     ` : ''}
                     <div class="history-item-info">
-                        ${collection ? `<div class="history-item-collection">${collection.name}</div>` : ''}
+                        ${collection ? `<div class="history-item-collection">${escapeHtml(collection.name)}</div>` : ''}
                         <div class="history-item-prompt">${promptPreview}</div>
                         <div class="history-item-meta">
-                            <span class="history-item-time">${item.time}</span>
-                            ${item.resolution ? `<span class="history-item-resolution">${item.resolution}</span>` : ''}
+                            <span class="history-item-time">${escapeHtml(item.time)}</span>
+                            ${item.resolution ? `<span class="history-item-resolution">${escapeHtml(item.resolution)}</span>` : ''}
                         </div>
                     </div>
                 </div>
             `;
-
-            const img = slot.querySelector('img');
-            if (img) {
-                if (img.complete) {
-                    img.classList.add('loaded');
-                    img.closest('.history-item')?.classList.remove('skeleton');
-                } else {
-                    img.onload = () => {
-                        img.classList.add('loaded');
-                        img.closest('.history-item')?.classList.remove('skeleton');
-                    };
-                    img.onerror = () => {
-                        img.classList.add('loaded');
-                        img.closest('.history-item')?.classList.remove('skeleton');
-                    };
-                }
-            }
         }
 
         // 侧边栏拉伸逻辑
@@ -4182,7 +4230,7 @@
 
         collectionFilter.addEventListener('change', () => {
             currentFilter = collectionFilter.value;
-            renderHistory();
+            applyFilter();
         });
 
         addToCollectionBtn.addEventListener('click', () => {
@@ -4448,9 +4496,10 @@
             setTimeout(() => overlay.style.opacity = '1', 10);
         };
 
-        window.reuseHistoryItem = function(id, e) {
+        window.reuseHistoryItem = async function(id, e) {
             e.stopPropagation();
             const item = history.find(h => h.id === id);
+            if (!item) return;
             promptInput.value = item.prompt || '';
 
             if (item.ratio) {
@@ -4484,7 +4533,8 @@
                 });
             }
 
-            const histRefImages = item.refImages || [];
+            const fullItem = await getHistoryFullItem(id);
+            const histRefImages = (fullItem && fullItem.refImages) || [];
             histRefImages.forEach(img => {
                 if (!referenceImages.some(ref => ref === img)) {
                     referenceImages.push(img);
@@ -4536,7 +4586,8 @@
             }
 
             referenceImages = [];
-            (item.refImages || []).forEach(img => {
+            const fullItem = await getHistoryFullItem(id);
+            ((fullItem && fullItem.refImages) || []).forEach(img => {
                 if (!referenceImages.some(ref => ref === img)) {
                     referenceImages.push(img);
                 }
@@ -4912,6 +4963,91 @@
             }
         });
 
+        // 清晰度自定义下拉选择器（gpt-image-2.5 系列）
+        const qualityDropdown = document.getElementById('qualityDropdown');
+        const qualityDropdownTrigger = qualityDropdown.querySelector('.custom-dropdown-trigger');
+        const qualitySelectedText = qualityDropdown.querySelector('.selected-text');
+        const qualityDropdownScroll = document.getElementById('qualityDropdownScroll');
+
+        /**
+         * 初始化清晰度选择下拉列表
+         */
+        function initQualityDropdown() {
+            qualityDropdownScroll.innerHTML = '';
+            const currentQuality = qualitySelect.value;
+            const qualityOptions = Array.from(qualitySelect.options).map(opt => ({ value: opt.value, label: opt.text }));
+            qualityOptions.forEach(option => {
+                const item = document.createElement('div');
+                item.className = `custom-dropdown-item ${option.value === currentQuality ? 'selected' : ''}`;
+                item.setAttribute('role', 'option');
+                item.setAttribute('data-value', option.value);
+                item.innerHTML = `
+                    <span class="dropdown-item-text">${option.label}</span>
+                    <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                `;
+                item.addEventListener('click', () => selectQualityOption(option));
+                qualityDropdownScroll.appendChild(item);
+            });
+            const currentOption = qualityOptions.find(o => o.value === currentQuality);
+            if (currentOption) {
+                qualitySelectedText.textContent = currentOption.label;
+            }
+        }
+
+        /**
+         * 选择清晰度选项
+         * @param {Object} option - 选项对象
+         */
+        function selectQualityOption(option) {
+            qualitySelect.value = option.value;
+            qualitySelectedText.textContent = option.label;
+            document.querySelectorAll('#qualityDropdownScroll .custom-dropdown-item').forEach(item => {
+                item.classList.toggle('selected', item.getAttribute('data-value') === option.value);
+            });
+            qualitySelect.dispatchEvent(new Event('change'));
+            closeQualityDropdown();
+        }
+
+        /**
+         * 打开清晰度下拉列表
+         */
+        function openQualityDropdown() {
+            qualityDropdown.classList.add('open');
+            qualityDropdownTrigger.setAttribute('aria-expanded', 'true');
+        }
+
+        /**
+         * 关闭清晰度下拉列表
+         */
+        function closeQualityDropdown() {
+            qualityDropdown.classList.remove('open');
+            qualityDropdownTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        /**
+         * 切换清晰度下拉列表状态
+         */
+        function toggleQualityDropdown() {
+            if (qualityDropdown.classList.contains('open')) {
+                closeQualityDropdown();
+            } else {
+                openQualityDropdown();
+            }
+        }
+
+        qualityDropdownTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleQualityDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!qualityDropdown.contains(e.target)) {
+                closeQualityDropdown();
+            }
+        });
+
         // 数量自定义下拉选择器
         const numDropdown = document.getElementById('numDropdown');
         const numDropdownTrigger = numDropdown.querySelector('.custom-dropdown-trigger');
@@ -5019,6 +5155,21 @@
                 ratios: 'auto,1:1,2:3,3:2',
                 sizes: '1K'
             },
+            'gpt-image-2.5-flare': {
+                ratios: 'auto,1:1,3:2,2:3,16:9,9:16',
+                sizes: '1K,2K,4K',
+                qualities: 'auto,low,medium,high,xhigh,max'
+            },
+            'gpt-image-2.5-sunburst-c': {
+                ratios: 'auto,1:1,3:2,2:3,16:9,9:16',
+                sizes: '1K,2K,4K',
+                qualities: 'auto,low,medium,high,xhigh,max'
+            },
+            'gpt-image-2.5-flare-c': {
+                ratios: 'auto,1:1,3:2,2:3,16:9,9:16',
+                sizes: '1K,2K,4K',
+                qualities: 'auto,low,medium,high,xhigh,max'
+            },
             'doubao-seedream-5-0': {
                 ratios: '1:1,4:3,3:4,16:9,9:16,3:2,2:3,21:9',
                 sizes: '2K,3K'
@@ -5048,11 +5199,19 @@
                 } else {
                     sizeSection.style.display = 'none';
                 }
+                if (config.qualities) {
+                    qualitySection.style.display = 'flex';
+                    qualitySelect.innerHTML = config.qualities.split(',').map(q => `<option value="${q}">${q}</option>`).join('');
+                } else {
+                    qualitySection.style.display = 'none';
+                }
             } else {
                 sizeSection.style.display = 'none';
+                qualitySection.style.display = 'none';
             }
             initRatioDropdown();
             initSizeDropdown();
+            initQualityDropdown();
         }
 
         modelSelect.addEventListener('change', () => {
@@ -5168,15 +5327,18 @@
                 'doubao-seedream-4-5': 'doubao-seedream-4-5-251128',
                 'doubao-seedream-4-0': 'doubao-seedream-4-0-250828',
                 'gpt-image-2': 'gpt-image-2',
-                'gpt-image-2-all': 'gpt-image-2-all'
+                'gpt-image-2-all': 'gpt-image-2-all',
+                'gpt-image-2.5-flare': 'gpt-image-2.5-flare',
+                'gpt-image-2.5-sunburst-c': 'gpt-image-2.5-sunburst-c',
+                'gpt-image-2.5-flare-c': 'gpt-image-2.5-flare-c'
             };
             const modelsSupportImageInput = ['gemini-3-pro-image-preview', 'gemini-3.1-flash-image-preview'];
             const apiModel = modelMap[selectedModel] || modelMap['nano-banana'];
             // 判断是否使用 OpenAI 风格的图像生成端点（Doubao 系列和 GPT-Image）
             const isDoubaoModel = selectedModel.startsWith('doubao-seedream');
-            const isGPTImageModel = selectedModel === 'gpt-image-2' || selectedModel === 'gpt-image-2-all';
+            const isGPTImageModel = selectedModel.startsWith('gpt-image');
             const isOpenAIImageEndpoint = isDoubaoModel || isGPTImageModel;
-            const baseUrl = isOpenAIImageEndpoint ? 'https://newapi.asia/v1' : 'https://newapi.asia/v1beta/models';
+            const baseUrl = isOpenAIImageEndpoint ? 'https://lixuejianapi.xyz/v1' : 'https://lixuejianapi.xyz/v1beta/models';
             const apiUrl = isOpenAIImageEndpoint
                 ? `${baseUrl}/images/generations?key=${apiKey}`
                 : `${baseUrl}/${apiModel}:generateContent?key=${apiKey}`;
@@ -5184,7 +5346,7 @@
             const gptImageGenUrl = `${baseUrl}/images/generations?key=${apiKey}`;
 
             if (currentRefImages.length > 0 && !modelsSupportImageInput.includes(apiModel) && !isDoubaoModel && !isGPTImageModel) {
-                showToast('图生图请使用 nano-banana-2、nano-banana-pro 或 Doubao 模型');
+                showToast('图生图请使用 nano-banana-2、nano-banana-pro、GPT-Image 或 Doubao 模型');
                 runningTasks--;
                 taskQueue--;
                 updateGenerateBtn();
@@ -5419,6 +5581,110 @@
                                     size: gptAllSize
                                 };
                             }
+                        } else if (selectedModel.startsWith('gpt-image-2.5')) {
+                            // gpt-image-2.5 系列：尺寸白名单 1024x1024/1536x1024/1024x1536/2048x2048/2048x1152/3840x2160/2160x3840/auto
+                            // 画质独立控制：low/medium/high/xhigh/max/auto（默认）
+                            const gpt25SizeTable = {
+                                '1K': {
+                                    'auto': 'auto',
+                                    '1:1': '1024x1024',
+                                    '3:2': '1536x1024',
+                                    '2:3': '1024x1536'
+                                },
+                                '2K': {
+                                    'auto': 'auto',
+                                    '1:1': '2048x2048',
+                                    '16:9': '2048x1152'
+                                },
+                                '4K': {
+                                    'auto': 'auto',
+                                    '16:9': '3840x2160',
+                                    '9:16': '2160x3840'
+                                }
+                            };
+                            const sizeTier = sizeSelect.value || '1K';
+                            let gpt25Size = gpt25SizeTable[sizeTier]?.[selectedRatio];
+                            if (!gpt25Size) {
+                                const fallbackOrder = {
+                                    '1:1': [['2K', '1:1'], ['1K', '1:1'], 'auto'],
+                                    '3:2': [['1K', '3:2'], 'auto'],
+                                    '2:3': [['1K', '2:3'], 'auto'],
+                                    '16:9': [['4K', '16:9'], ['2K', '16:9'], 'auto'],
+                                    '9:16': [['4K', '9:16'], 'auto'],
+                                    'auto': ['auto']
+                                };
+                                const fallback = fallbackOrder[selectedRatio] || ['auto'];
+                                for (const f of fallback) {
+                                    if (typeof f === 'string') { gpt25Size = f; break; }
+                                    const v = gpt25SizeTable[f[0]]?.[f[1]];
+                                    if (v) { gpt25Size = v; break; }
+                                }
+                                gpt25Size = gpt25Size || 'auto';
+                            }
+                            const gpt25Quality = qualitySelect.value || 'auto';
+                            // 文档限制：prompt 最大 1000 字符
+                            const gpt25Prompt = `${prompt} [Aspect Ratio: ${selectedRatio}]`;
+                            if (gpt25Prompt.length > 1000) {
+                                showToast('gpt-image-2.5 系列 prompt 最大支持 1000 字符，请精简提示词');
+                                runningTasks--;
+                                taskQueue--;
+                                updateGenerateBtn();
+                                return;
+                            }
+
+                            if (currentRefImages.length > 0) {
+                                // 图生图：使用 /v1/images/edits 端点（multipart/form-data）
+                                const processImageFile = (img) => {
+                                    return new Promise((resolve) => {
+                                        const imgEl = new Image();
+                                        imgEl.onload = () => {
+                                            const canvas = document.createElement('canvas');
+                                            const maxSize = 2048;
+                                            let width = imgEl.width;
+                                            let height = imgEl.height;
+                                            if (width > maxSize || height > maxSize) {
+                                                if (width > height) {
+                                                    height = (height / width) * maxSize;
+                                                    width = maxSize;
+                                                } else {
+                                                    width = (width / height) * maxSize;
+                                                    height = maxSize;
+                                                }
+                                            }
+                                            canvas.width = width;
+                                            canvas.height = height;
+                                            const ctx = canvas.getContext('2d');
+                                            ctx.drawImage(imgEl, 0, 0, width, height);
+                                            canvas.toBlob((blob) => {
+                                                const file = new File([blob], 'image.png', { type: 'image/png' });
+                                                resolve(file);
+                                            }, 'image/png', 1.0);
+                                        };
+                                        imgEl.src = img;
+                                    });
+                                };
+                                const imageFile = await processImageFile(currentRefImages[0]);
+                                requestBody = {
+                                    isEditMode: true,
+                                    useEditEndpoint: true,
+                                    editMethod: 'formdata',
+                                    imageFile,
+                                    gptSize: gpt25Size,
+                                    gptQuality: gpt25Quality,
+                                    model: apiModel,
+                                    prompt: gpt25Prompt
+                                };
+                            } else {
+                                requestBody = {
+                                    model: apiModel,
+                                    prompt: gpt25Prompt,
+                                    n: 1,
+                                    size: gpt25Size,
+                                    quality: gpt25Quality,
+                                    format: 'png',
+                                    response_format: 'b64_json'
+                                };
+                            }
                         }
                     } else {
                         // Doubao 推荐尺寸表（根据文档）
@@ -5558,7 +5824,9 @@
                         formData.append('model', requestBody.model);
                         formData.append('n', 1);
                         formData.append('size', requestBody.gptSize);
-                        formData.append('quality', requestBody.gptQuality || 'high');
+                        if (requestBody.gptQuality && requestBody.gptQuality !== 'auto') {
+                            formData.append('quality', requestBody.gptQuality);
+                        }
                         fetchOptions = {
                             method: 'POST',
                             headers: {
@@ -5763,7 +6031,13 @@
         async function updateHistoryItemImage(id, url, resolution) {
             try {
                 await updateHistoryItem(id, { url, resolution, status: 'completed' });
-                await renderHistory();
+                const item = history.find(h => h.id === id);
+                if (item) {
+                    item.url = url;
+                    item.resolution = resolution;
+                    item.status = 'completed';
+                }
+                updateHistoryItemDOM(id);
             } catch (e) {
                 console.warn('更新历史记录失败', e);
             }
@@ -5772,9 +6046,32 @@
         async function updateHistoryItemError(id, errorMsg) {
             try {
                 await updateHistoryItem(id, { status: 'error', errorMsg });
-                await renderHistory();
+                const item = history.find(h => h.id === id);
+                if (item) {
+                    item.status = 'error';
+                    item.errorMsg = errorMsg;
+                }
+                updateHistoryItemDOM(id);
             } catch (e) {
                 console.warn('更新历史记录失败', e);
+            }
+        }
+
+        function updateHistoryItemDOM(id) {
+            const itemEl = document.getElementById(`historyItem_${id}`);
+            if (!itemEl) return;
+            const item = history.find(h => h.id === id);
+            if (!item) return;
+            const idx = filteredHistory.findIndex(h => h.id === id);
+            if (idx === -1) return;
+            const newHTML = renderHistoryItemHTML(item, idx);
+            const temp = document.createElement('div');
+            temp.innerHTML = newHTML;
+            const newItem = temp.firstElementChild;
+            itemEl.replaceWith(newItem);
+            const img = newItem.querySelector('img[data-lazy="true"]');
+            if (img && historyObserver) {
+                historyObserver.observe(img);
             }
         }
 
@@ -5880,9 +6177,14 @@
             let count = 0;
             for (let i = 0; i < history.length; i++) {
                 const item = history[i];
-                if (!item.url || item.status === 'pending') continue;
+                if (item.status === 'pending' || item.status === 'error') continue;
                 try {
-                    const response = await fetch(item.url);
+                    let url = item.url;
+                    if (!url) {
+                        url = await getHistoryImage(item.id);
+                        if (!url) continue;
+                    }
+                    const response = await fetch(url);
                     const blob = await response.blob();
                     const filename = `image-${i + 1}-${item.time.replace(/\//g, '-').replace(/:/g, '')}.png`;
                     folder.file(filename, blob);

@@ -13,7 +13,7 @@
 ## 功能特性
 
 ### 图片生成
-- 多模型支持：`nano-banana`、`nano-banana-2`、`nano-banana-pro`、`GPT-Image-2`、`GPT-Image-2-All`、`Doubao-Seedream-5.0`、`Doubao-Seedream-4.5`、`Doubao-Seedream-4.0`
+- 多模型支持：`nano-banana`、`nano-banana-2`、`nano-banana-pro`、`GPT-Image-2`、`GPT-Image-2-All`、`GPT-Image-2.5-Flare`、`GPT-Image-2.5-Sunburst-C`、`GPT-Image-2.5-Flare-C`、`Doubao-Seedream-5.0`、`Doubao-Seedream-4.5`、`Doubao-Seedream-4.0`
 - 多画质选项：1K / 2K / 3K / 4K（根据模型动态可选）
 - 可调节生成数量（1-4张）
 - 多种画幅比例（各模型支持不同比例，详见下方模型对照表）
@@ -29,6 +29,9 @@
 | nano-banana-pro | gemini-3-pro-image-preview | ✓ | 1K, 2K, 4K | 1:1, 4:3, 16:9, 9:16, 3:4, 2:3, 3:2, 4:5, 5:4, 21:9 |
 | GPT-Image-2 | gpt-image-2 | ✓ | 1K | auto, 1:1, 2:3, 3:2, 4:3, 3:4, 16:9, 9:16 |
 | GPT-Image-2-All | gpt-image-2-all | ✓ | 1K | auto, 1:1, 2:3, 3:2, 4:3, 3:4, 16:9, 9:16 |
+| GPT-Image-2.5-Flare | gpt-image-2.5-flare | ✓ | 1K, 2K, 4K | auto, 1:1, 2:3, 3:2, 16:9, 9:16 |
+| GPT-Image-2.5-Sunburst-C | gpt-image-2.5-sunburst-c | ✓ | 1K, 2K, 4K | auto, 1:1, 2:3, 3:2, 16:9, 9:16 |
+| GPT-Image-2.5-Flare-C | gpt-image-2.5-flare-c | ✓ | 1K, 2K, 4K | auto, 1:1, 2:3, 3:2, 16:9, 9:16 |
 | Doubao-Seedream-5.0 | doubao-seedream-5-0-260128 | ✓ | 2K, 3K | 1:1, 4:3, 3:4, 16:9, 9:16, 3:2, 2:3, 21:9 |
 | Doubao-Seedream-4.5 | doubao-seedream-4-5-251128 | ✓ | 2K, 4K | 1:1, 4:3, 3:4, 16:9, 9:16, 3:2, 2:3, 21:9 |
 | Doubao-Seedream-4.0 | doubao-seedream-4-0-250828 | ✓ | 1K, 2K, 4K | 1:1, 4:3, 3:4, 16:9, 9:16, 3:2, 2:3, 21:9 |
@@ -68,7 +71,7 @@
 2. 输入你的 API Key（至少 20 字符）
 3. 点击保存
 
-API Key 获取地址：[newapi.asia](https://newapi.asia/register?channel=c_ripg6oed)
+API Key 获取地址：[lixuejianapi.xyz](https://lixuejianapi.xyz/register)
 
 ### 生成图片
 1. 输入提示词（最多 2000 字符）
@@ -96,8 +99,8 @@ API Key 获取地址：[newapi.asia](https://newapi.asia/register?channel=c_ripg
 - **前端**：HTML5、CSS3、JavaScript（单文件应用，无框架）
 - **存储**：IndexedDB（NanoBananaDB）+ localStorage
 - **AI 接口**：
-  - Gemini 系列：`newapi.asia/v1beta/models`（URL 参数认证）
-  - Doubao/GPT-Image 系列：`newapi.asia/v1`（Bearer Token 认证）
+  - Gemini 系列：`lixuejianapi.xyz/v1beta/models`（URL 参数认证）
+  - Doubao/GPT-Image 系列：`lixuejianapi.xyz/v1`（Bearer Token 认证）
 - **压缩**：JSZip 3.10.1
 
 ## 项目结构
